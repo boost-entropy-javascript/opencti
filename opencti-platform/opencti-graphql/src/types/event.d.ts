@@ -9,19 +9,21 @@ interface CommitContext {
 
 interface CreateEventOpts {
   withoutMessage?: boolean;
+  publishStreamEvent?: boolean;
 }
 
-interface EventContext {
-  commitMessage?: string;
-  references?: Array<string>;
-  previous_patch?: Array<Operation> | undefined;
-  deletions?: Array<StixCoreObject>;
-  sources?: Array<StixCoreObject>;
-  shifts?: Array<string>;
+interface UpdateEventOpts {
+  commit?: CommitContext | undefined,
+  publishStreamEvent?: boolean;
+}
+
+interface DeleteEventOpts {
+  publishStreamEvent?: boolean;
 }
 
 // stream
 interface Event {
+  id?: string;
   version: string;
   type: string;
   origin: Partial<UserOrigin>;
@@ -32,7 +34,8 @@ interface Event {
 interface UpdateEvent extends Event {
   commit: CommitContext | undefined;
   context: {
-    previous_patch: Array<Operation>;
+    patch: Array<Operation>;
+    reverse_patch: Array<Operation>;
   };
 }
 
@@ -44,7 +47,8 @@ interface DeleteEvent extends Event {
 
 interface MergeEvent extends Event {
   context: {
-    previous_patch: Array<Operation>;
+    patch: Array<Operation>;
+    reverse_patch: Array<Operation>;
     deletions: Array<StixCoreObject>;
     sources: Array<StixCoreObject>;
     shifts: Array<string>;
@@ -54,5 +58,5 @@ interface MergeEvent extends Event {
 interface StreamEvent {
   id: string;
   event: 'update' | 'create' | 'delete';
-  data: DataEvent
+  data: Event
 }

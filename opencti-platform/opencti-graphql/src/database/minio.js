@@ -2,7 +2,7 @@ import * as Minio from 'minio';
 import * as He from 'he';
 import { assoc, concat, map, sort, filter } from 'ramda';
 import querystring from 'querystring';
-import conf, { booleanConf, logApp, logAudit } from '../config/conf';
+import conf, { booleanConf, configureCA, logApp, logAudit } from '../config/conf';
 import { buildPagination } from './utils';
 import { loadExportWorksAsProgressFiles, deleteWorkForFile } from '../domain/work';
 import { now, sinceNowInMinutes } from '../utils/format';
@@ -18,6 +18,10 @@ const minioClient = new Minio.Client({
   useSSL: booleanConf('minio:use_ssl', false),
   accessKey: String(conf.get('minio:access_key')),
   secretKey: String(conf.get('minio:secret_key')),
+  reqOptions: {
+    ...configureCA(conf.get('minio:ca')),
+    servername: conf.get('minio:endpoint'),
+  },
 });
 
 export const isStorageAlive = () => {
@@ -46,6 +50,15 @@ export const deleteFile = async (user, id) => {
   logApp.debug(`[MINIO] delete file ${id} by ${user.user_email}`);
   await minioClient.removeObject(bucketName, id);
   await deleteWorkForFile(user, id);
+  return true;
+};
+
+export const deleteFiles = async (user, ids) => {
+  logApp.debug(`[MINIO] delete files ${ids} by ${user.user_email}`);
+  for (let i = 0; i < ids.length; i += 1) {
+    const id = ids[i];
+    await deleteFile(user, id);
+  }
   return true;
 };
 
@@ -102,10 +115,10 @@ export const loadFile = async (user, filename) => {
   }
 };
 
-export const rawFilesListing = (user, directory) => {
+export const rawFilesListing = (user, directory, recursive = false) => {
   return new Promise((resolve, reject) => {
     const files = [];
-    const stream = minioClient.listObjectsV2(bucketName, directory);
+    const stream = minioClient.listObjectsV2(bucketName, directory, recursive);
     stream.on('data', async (obj) => {
       if (obj.name) {
         files.push(assoc('id', obj.name, obj));
@@ -164,29 +177,4 @@ export const deleteAllFiles = async (user, path) => {
   const inExport = await loadExportWorksAsProgressFiles(user, path);
   const allFiles = concat(inExport, files);
   return Promise.all(allFiles.map((file) => deleteFile(user, file.id)));
-};
-
-export const getMinIOVersion = () => {
-  const serverHeaderPrefix = 'MinIO/';
-  return new Promise((resolve) => {
-    // MinIO server information is included in the "Server" header of the
-    // response. Make "bucketExists" request to get the header value.
-    minioClient.makeRequest({ method: 'HEAD', bucketName }, '', 200, '', true, (err, response) => {
-      /* istanbul ignore if */
-      if (err) {
-        logApp.error('[MINIO] Error requesting server version: ', { error: err });
-        resolve('Disconnected');
-        return;
-      }
-      const serverHeader = response.headers.server || '';
-      /* istanbul ignore else */
-      if (serverHeader.startsWith(serverHeaderPrefix)) {
-        const version = serverHeader.substring(serverHeaderPrefix.length);
-        resolve(version);
-      } else {
-        // logApp.error(`[MINIO] Unexpected Server header`, { headers: serverHeader });
-        resolve('-');
-      }
-    });
-  });
 };

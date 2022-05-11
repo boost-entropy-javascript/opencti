@@ -19,12 +19,12 @@ import {
   INPUT_ENCAPSULATED_BY,
   INPUT_ENCAPSULATES,
   INPUT_FROM,
-  INPUT_IMAGE,
-  INPUT_OPENED_CONNECTION,
+  INPUT_IMAGE, INPUT_LINKED,
+  INPUT_OPENED_CONNECTION, INPUT_OPERATING_SYSTEM,
   INPUT_PARENT,
   INPUT_PARENT_DIRECTORY,
   INPUT_RAW_EMAIL,
-  INPUT_RESOLVES_TO,
+  INPUT_RESOLVES_TO, INPUT_SAMPLE,
   INPUT_SENDER,
   INPUT_SRC,
   INPUT_SRC_PAYLOAD,
@@ -157,6 +157,17 @@ const cleanObject = <T>(data: T): T => {
   for (const key in data) {
     if (isEmptyField(obj[key])) {
       delete obj[key];
+    } else if (key === 'extensions') {
+      // Extensions can be generated with only the extension_type
+      // If it's the case, no need to keep the extension
+      const extensionDefinitions = Object.entries(obj[key]);
+      for (let i = 0; i < extensionDefinitions.length; i += 1) {
+        const [extKey, extObject] = extensionDefinitions[i];
+        if (Object.entries(extObject).length === 1) {
+          const ext = obj[key] as any;
+          delete ext[extKey];
+        }
+      }
     }
   }
   return obj;
@@ -169,7 +180,7 @@ const buildOCTIExtensions = (instance: StoreBase): S.StixOpenctiExtension => {
     id: instance.internal_id,
     type: instance.entity_type,
     created_at: instance.created_at,
-    aliases: instance.x_opencti_aliases,
+    aliases: instance.x_opencti_aliases ?? [],
     files: (instance.x_opencti_files ?? []).map((file) => ({
       name: file.name,
       uri: `${baseUrl}${basePath}/storage/get/${file.id}`,
@@ -194,11 +205,10 @@ const buildMITREExtensions = (instance: StoreEntity): S.StixMitreExtension => {
 
 // Builders
 const buildStixObject = (instance: BasicStoreCommon): S.StixObject => {
-  const isFullStix = instance.entity_type !== undefined;
   return {
     id: instance.standard_id,
-    spec_version: isFullStix ? '2.1' : undefined,
-    type: isFullStix ? convertTypeToStixType(instance.entity_type) : undefined,
+    spec_version: '2.1',
+    type: convertTypeToStixType(instance.entity_type),
     extensions: {
       [STIX_EXT_OCTI]: buildOCTIExtensions(instance),
     }
@@ -292,6 +302,7 @@ const buildStixCyberObservable = (instance: StoreCyberObservable): S.StixCyberOb
         description: instance.x_opencti_description,
         score: instance.x_opencti_score,
         created_by_ref: instance[INPUT_CREATED_BY]?.standard_id,
+        linked_to_refs: (instance[INPUT_LINKED] ?? []).map((m) => m.standard_id),
         external_references: buildExternalReferences(instance)
       })
     }
@@ -505,8 +516,8 @@ const convertMalwareToStix = (instance: StoreEntity, type: string): SDO.StixMalw
     architecture_execution_envs: instance.architecture_execution_envs,
     implementation_languages: instance.implementation_languages,
     capabilities: instance.capabilities,
-    // operating_system_refs: Array<StixId>; // optional
-    // sample_refs: Array<StixId>; // optional
+    operating_system_refs: (instance[INPUT_OPERATING_SYSTEM] ?? []).map((m) => m.standard_id),
+    sample_refs: (instance[INPUT_SAMPLE] ?? []).map((m) => m.standard_id),
   };
 };
 const convertAttackPatternToStix = (instance: StoreEntity, type: string): SDO.StixAttackPattern => {
@@ -575,7 +586,7 @@ const convertArtifactToStix = (instance: StoreCyberObservable, type: string): SC
     mime_type: instance.mime_type,
     payload_bin: instance.payload_bin,
     url: instance.url,
-    hashes: instance.hashes,
+    hashes: instance.hashes ?? {}, // TODO JRI Find a way to make that mandatory
     encryption_algorithm: instance.encryption_algorithm,
     decryption_key: instance.decryption_key,
     extensions: {
@@ -685,7 +696,7 @@ const convertFileToStix = (instance: StoreCyberObservable, type: string): SCO.St
   const stixCyberObject = buildStixCyberObservable(instance);
   return {
     ...stixCyberObject,
-    hashes: instance.hashes,
+    hashes: instance.hashes ?? {}, // TODO JRI Find a way to make that mandatory
     size: instance.size,
     name: instance.name,
     name_enc: instance.name_enc,
@@ -868,7 +879,7 @@ const convertX509CertificateToStix = (instance: StoreCyberObservable, type: stri
   return {
     ...buildStixCyberObservable(instance),
     is_self_signed: instance.is_self_signed,
-    hashes: instance.hashes,
+    hashes: instance.hashes ?? {}, // TODO JRI Find a way to make that mandatory
     version: instance.version,
     serial_number: instance.serial_number,
     signature_algorithm: instance.signature_algorithm,
@@ -953,7 +964,7 @@ const convertSightingToStix = (instance: StoreRelation): SRO.StixSighting => {
         sighting_of_type: instance.from?.entity_type,
         where_sighted_refs: instance.to?.internal_id ? [instance.to?.internal_id] : [],
         where_sighted_types: instance.to?.entity_type ? [instance.to?.entity_type] : [],
-        negative: instance.negative,
+        negative: instance.x_opencti_negative,
       })
     }
   };
@@ -1011,7 +1022,7 @@ const convertExternalReferenceToStix = (instance: StoreEntity): SMO.StixExternal
     source_name: instance.source_name,
     description: instance.description,
     url: instance.url,
-    hashes: instance.hashes,
+    hashes: instance.hashes ?? {}, // TODO JRI Find a way to make that mandatory
     external_id: instance.external_id,
     extensions: {
       [STIX_EXT_OCTI]: cleanObject({
@@ -1256,8 +1267,8 @@ export const convertStoreToStix = (instance: StoreObject): S.StixObject => {
     throw UnsupportedError('convertInstanceToStix must be used with opencti fully loaded instance');
   }
   const converted = convertToStix(instance);
-  // converted.extensions = buildExtensions(converted);
   const stix = cleanObject(converted);
+  // TODO JRI Cleanup generated extensions that are empty
   if (!isValidStix(stix)) {
     throw FunctionalError('Invalid stix data conversion', { data: instance });
   }

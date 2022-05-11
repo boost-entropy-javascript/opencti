@@ -3,6 +3,7 @@ import * as PropTypes from 'prop-types';
 import { Link, withRouter } from 'react-router-dom';
 import * as R from 'ramda';
 import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
 import { graphql, createFragmentContainer } from 'react-relay';
 import Markdown from 'react-markdown';
 import Grid from '@mui/material/Grid';
@@ -116,14 +117,22 @@ const styles = (theme) => ({
   },
   buttonExpand: {
     position: 'absolute',
+    left: 0,
     bottom: 0,
     width: '100%',
     height: 25,
-    backgroundColor: 'rgba(255, 255, 255, .1)',
+    color: theme.palette.primary.main,
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? 'rgba(255, 255, 255, .1)'
+        : 'rgba(0, 0, 0, .1)',
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
     '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, .2)',
+      backgroundColor:
+        theme.palette.mode === 'dark'
+          ? 'rgba(255, 255, 255, .2)'
+          : 'rgba(0, 0, 0, .2)',
     },
   },
 });
@@ -180,7 +189,7 @@ class StixCoreRelationshipContainer extends Component {
   }
 
   render() {
-    const { t, nsdt, classes, stixCoreRelationship, paddingRight } = this.props;
+    const { t, nsdt, classes, theme, stixCoreRelationship, paddingRight } = this.props;
     const { expanded } = this.state;
     const { from } = stixCoreRelationship;
     const { to } = stixCoreRelationship;
@@ -263,7 +272,7 @@ class StixCoreRelationshipContainer extends Component {
           <div
             style={{
               padding: '5px 8px 5px 8px',
-              backgroundColor: '#14262c',
+              backgroundColor: theme.palette.background.accent,
               color: '#ffffff',
               fontSize: 12,
               display: 'inline-block',
@@ -3768,5 +3777,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
 export default R.compose(
   inject18n,
   withRouter,
+  withTheme,
   withStyles(styles),
 )(StixCoreRelationshipOverview);

@@ -10,7 +10,7 @@ import {
   internalLoadById,
   patchAttribute,
   stixLoadById,
-  storeLoadByIdWithRefs,
+  storeLoadByIdWithRefs
 } from '../database/middleware';
 import { isEmptyField, isNotEmptyField, READ_DATA_INDICES } from '../database/utils';
 import { EVENT_TYPE_CREATE, EVENT_TYPE_DELETE, EVENT_TYPE_MERGE, EVENT_TYPE_UPDATE } from '../database/rabbitmq';
@@ -19,7 +19,6 @@ import { ENTITY_TYPE_RULE, ENTITY_TYPE_RULE_MANAGER, ENTITY_TYPE_TASK } from '..
 import { TYPE_LOCK_ERROR, UnsupportedError } from '../config/errors';
 import { createRuleTask, deleteTask } from '../domain/task';
 import { RULE_MANAGER_USER, RULES_ATTRIBUTES_BEHAVIOR } from '../rules/rules';
-import { MIN_LIVE_STREAM_EVENT_VERSION } from '../graphql/sseMiddleware';
 import { getParentTypes } from '../schema/schemaUtils';
 import { isBasicRelationship } from '../schema/stixRelationship';
 import { isStixSightingRelationship } from '../schema/stixSightingRelationship';
@@ -44,7 +43,7 @@ import type {
   BasicRuleEntity,
   BasicStoreCommon,
   BasicStoreEntity,
-  BasicTaskEntity,
+  BasicTaskEntity
 } from '../types/store';
 import type { AuthUser } from '../types/user';
 import type { RuleManager } from '../generated/graphql';
@@ -52,6 +51,8 @@ import type { StixCoreObject } from '../types/stix-common';
 import { STIX_EXT_OCTI } from '../types/stix-extensions';
 import type { StixRelation, StixSighting } from '../types/stix-sro';
 import type { DeleteEvent, Event, MergeEvent, StreamEvent, UpdateEvent } from '../types/event';
+
+const MIN_LIVE_STREAM_EVENT_VERSION = 4;
 
 // let activatedRules: Array<RuleRuntime> = [];
 const RULE_ENGINE_ID = 'rule_engine_settings';
@@ -165,7 +166,7 @@ const ruleMergeHandler = async (event: MergeEvent): Promise<Array<Event>> => {
   // endregion
   // region 03 - Generate event for merged entity
   const updateEvent = buildInternalEvent(EVENT_TYPE_UPDATE, data) as UpdateEvent;
-  updateEvent.context = { previous_patch: context.previous_patch };
+  updateEvent.context = { patch: context.patch, reverse_patch: context.reverse_patch };
   events.push(updateEvent);
   // endregion
   return events;
@@ -285,7 +286,7 @@ export const rulesApplyHandler = async (events: Array<Event>, forRules: Array<Ru
       // In case of update apply the event on every rules
       if (type === EVENT_TYPE_UPDATE) {
         const updateEvent = event as UpdateEvent;
-        const previousPatch = updateEvent.context.previous_patch;
+        const previousPatch = updateEvent.context.reverse_patch;
         const previousStix = jsonpatch.applyPatch<StixCoreObject>(R.clone(data), previousPatch).newDocument;
         for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex += 1) {
           const rule = rules[ruleIndex];
@@ -347,8 +348,10 @@ const ruleStreamHandler = async (streamEvents: Array<StreamEvent>) => {
   const compatibleEvents = streamEvents.filter((event) => {
     const eventVersion = parseInt(event.data?.version ?? '0', 10);
     const isCompatibleVersion = eventVersion >= MIN_LIVE_STREAM_EVENT_VERSION;
-    const isInferenceEvent = event.data?.data?.extensions[STIX_EXT_OCTI].is_inferred ?? false;
-    return isCompatibleVersion && !isInferenceEvent;
+    if (!isCompatibleVersion) {
+      return false;
+    }
+    return !(event.data?.data?.extensions[STIX_EXT_OCTI].is_inferred ?? false);
   });
   if (compatibleEvents.length > 0) {
     const ruleEvents: Array<Event> = compatibleEvents.map((e) => e.data);

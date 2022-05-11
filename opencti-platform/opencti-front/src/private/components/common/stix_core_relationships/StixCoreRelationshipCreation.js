@@ -728,7 +728,7 @@ class StixCoreRelationshipCreation extends Component {
                   <div
                     style={{
                       padding: '5px 8px 5px 8px',
-                      backgroundColor: theme.palette.background.paperLight,
+                      backgroundColor: theme.palette.background.accent,
                       color: theme.palette.text.primary,
                       fontSize: 12,
                       display: 'inline-block',
@@ -787,7 +787,7 @@ class StixCoreRelationshipCreation extends Component {
             <div
               className={classes.item}
               style={{
-                backgroundColor: theme.palette.background.paperLight,
+                backgroundColor: theme.palette.background.accent,
                 top: 10,
                 left: 10,
               }}
@@ -825,7 +825,7 @@ class StixCoreRelationshipCreation extends Component {
               <div
                 style={{
                   padding: '5px 8px 5px 8px',
-                  backgroundColor: theme.palette.background.paperLight,
+                  backgroundColor: theme.palette.background.accent,
                   color: theme.palette.text.primary,
                   fontSize: 12,
                   display: 'inline-block',
@@ -837,7 +837,7 @@ class StixCoreRelationshipCreation extends Component {
             <div
               className={classes.item}
               style={{
-                backgroundColor: theme.palette.background.paperLight,
+                backgroundColor: theme.palette.background.accent,
                 top: 10,
                 right: 10,
               }}

@@ -31,9 +31,9 @@ import ReportKnowledgeGraphBar from './ReportKnowledgeGraphBar';
 import { reportMutationFieldPatch } from './ReportEditionOverview';
 import {
   reportKnowledgeGraphtMutationRelationAddMutation,
-  reportKnowledgeGraphtMutationRelationDeleteMutation,
+  reportKnowledgeGraphMutationRelationDeleteMutation,
+  reportKnowledgeGraphQueryStixRelationshipDeleteMutation,
 } from './ReportKnowledgeGraphQuery';
-import { stixCoreRelationshipEditionDeleteMutation } from '../../common/stix_core_relationships/StixCoreRelationshipEdition';
 import ContainerHeader from '../../common/containers/ContainerHeader';
 import ReportPopover from './ReportPopover';
 
@@ -52,13 +52,24 @@ export const reportKnowledgeGraphQuery = graphql`
 
 const reportKnowledgeGraphCheckRelationQuery = graphql`
   query ReportKnowledgeGraphCheckRelationQuery($id: String!) {
-    stixCoreRelationship(id: $id) {
+    stixRelationship(id: $id) {
       id
       is_inferred
-      reports {
-        edges {
-          node {
-            id
+      ... on StixCoreRelationship {
+        reports {
+          edges {
+            node {
+              id
+            }
+          }
+        }
+      }
+      ... on StixSightingRelationship {
+        reports {
+          edges {
+            node {
+              id
+            }
           }
         }
       }
@@ -167,60 +178,117 @@ const reportKnowledgeGraphStixCoreObjectQuery = graphql`
   }
 `;
 
-const reportKnowledgeGraphStixCoreRelationshipQuery = graphql`
-  query ReportKnowledgeGraphStixCoreRelationshipQuery($id: String!) {
-    stixCoreRelationship(id: $id) {
+const reportKnowledgeGraphStixRelationshipQuery = graphql`
+  query ReportKnowledgeGraphStixRelationshipQuery($id: String!) {
+    stixRelationship(id: $id) {
       id
       entity_type
       parent_types
-      start_time
-      stop_time
-      created
-      confidence
-      relationship_type
-      from {
-        ... on BasicObject {
-          id
-          entity_type
-          parent_types
-        }
-        ... on BasicRelationship {
-          id
-          entity_type
-          parent_types
-        }
-        ... on StixCoreRelationship {
-          relationship_type
-        }
-      }
-      to {
-        ... on BasicObject {
-          id
-          entity_type
-          parent_types
-        }
-        ... on BasicRelationship {
-          id
-          entity_type
-          parent_types
-        }
-        ... on StixCoreRelationship {
-          relationship_type
-        }
-      }
-      created_at
-      createdBy {
-        ... on Identity {
-          id
-          name
-          entity_type
-        }
-      }
-      objectMarking {
-        edges {
-          node {
+      ... on StixCoreRelationship {
+        relationship_type
+        start_time
+        stop_time
+        confidence
+        created
+        is_inferred
+        from {
+          ... on BasicObject {
             id
-            definition
+            entity_type
+            parent_types
+          }
+          ... on BasicRelationship {
+            id
+            entity_type
+            parent_types
+          }
+          ... on StixCoreRelationship {
+            relationship_type
+          }
+        }
+        to {
+          ... on BasicObject {
+            id
+            entity_type
+            parent_types
+          }
+          ... on BasicRelationship {
+            id
+            entity_type
+            parent_types
+          }
+          ... on StixCoreRelationship {
+            relationship_type
+          }
+        }
+        created_at
+        createdBy {
+          ... on Identity {
+            id
+            name
+            entity_type
+          }
+        }
+        objectMarking {
+          edges {
+            node {
+              id
+              definition
+            }
+          }
+        }
+      }
+      ... on StixSightingRelationship {
+        relationship_type
+        first_seen
+        last_seen
+        confidence
+        created
+        is_inferred
+        from {
+          ... on BasicObject {
+            id
+            entity_type
+            parent_types
+          }
+          ... on BasicRelationship {
+            id
+            entity_type
+            parent_types
+          }
+          ... on StixCoreRelationship {
+            relationship_type
+          }
+        }
+        to {
+          ... on BasicObject {
+            id
+            entity_type
+            parent_types
+          }
+          ... on BasicRelationship {
+            id
+            entity_type
+            parent_types
+          }
+          ... on StixCoreRelationship {
+            relationship_type
+          }
+        }
+        created_at
+        createdBy {
+          ... on Identity {
+            id
+            name
+            entity_type
+          }
+        }
+        objectMarking {
+          edges {
+            node {
+              id
+              definition
+            }
           }
         }
       }
@@ -319,6 +387,8 @@ class ReportKnowledgeGraphComponent extends Component {
       numberOfSelectedLinks: 0,
       width: null,
       height: null,
+      zoomed: false,
+      keyword: '',
     };
   }
 
@@ -543,6 +613,7 @@ class ReportKnowledgeGraphComponent extends Component {
           stixCoreObjectsTypes: allStixCoreObjectsTypes,
           markedBy: allMarkedBy.map((n) => n.id),
           createdBy: allCreatedBy.map((n) => n.id),
+          keyword: '',
         },
         () => {
           this.saveParameters(false);
@@ -639,7 +710,7 @@ class ReportKnowledgeGraphComponent extends Component {
     this.graphObjects = [...this.graphObjects, stixCoreObject];
     this.graphData = buildGraphData(
       this.graphObjects,
-      decodeGraphData(this.props.report.x_opencti_graph_data),
+      decodeGraphData(this.props.report.graph_data),
       this.props.t,
     );
     await this.resetAllFilters();
@@ -654,7 +725,7 @@ class ReportKnowledgeGraphComponent extends Component {
           this.state.stixCoreObjectsTypes,
           this.state.markedBy,
           this.state.createdBy,
-          ignoredStixCoreObjectsTypes,
+          [],
           selectedTimeRangeInterval,
         ),
       },
@@ -720,7 +791,7 @@ class ReportKnowledgeGraphComponent extends Component {
     await this.resetAllFilters();
     R.forEach((n) => {
       commitMutation({
-        mutation: reportKnowledgeGraphtMutationRelationDeleteMutation,
+        mutation: reportKnowledgeGraphMutationRelationDeleteMutation,
         variables: {
           id: this.props.report.id,
           toId: n.id,
@@ -736,6 +807,7 @@ class ReportKnowledgeGraphComponent extends Component {
         this.state.createdBy,
         ignoredStixCoreObjectsTypes,
         this.state.selectedTimeRangeInterval,
+        this.state.keyword,
       ),
     });
   }
@@ -751,18 +823,18 @@ class ReportKnowledgeGraphComponent extends Component {
         .toPromise()
         .then(async (data) => {
           if (
-            !data.stixCoreRelationship.is_inferred
-            && data.stixCoreRelationship.reports.edges.length === 1
+            !data.stixRelationship.is_inferred
+            && data.stixRelationship.reports.edges.length === 1
           ) {
             commitMutation({
-              mutation: stixCoreRelationshipEditionDeleteMutation,
+              mutation: reportKnowledgeGraphQueryStixRelationshipDeleteMutation,
               variables: {
                 id: n.id,
               },
             });
           } else {
             commitMutation({
-              mutation: reportKnowledgeGraphtMutationRelationDeleteMutation,
+              mutation: reportKnowledgeGraphMutationRelationDeleteMutation,
               variables: {
                 id: this.props.report.id,
                 toId: n.id,
@@ -794,7 +866,7 @@ class ReportKnowledgeGraphComponent extends Component {
     );
     R.forEach((n) => {
       commitMutation({
-        mutation: reportKnowledgeGraphtMutationRelationDeleteMutation,
+        mutation: reportKnowledgeGraphMutationRelationDeleteMutation,
         variables: {
           id: this.props.report.id,
           toId: n.id,
@@ -804,7 +876,7 @@ class ReportKnowledgeGraphComponent extends Component {
     }, relationshipsToRemove);
     R.forEach((n) => {
       commitMutation({
-        mutation: reportKnowledgeGraphtMutationRelationDeleteMutation,
+        mutation: reportKnowledgeGraphMutationRelationDeleteMutation,
         variables: {
           id: this.props.report.id,
           toId: n.id,
@@ -827,6 +899,7 @@ class ReportKnowledgeGraphComponent extends Component {
         this.state.createdBy,
         ignoredStixCoreObjectsTypes,
         this.state.selectedTimeRangeInterval,
+        this.state.keyword,
       ),
       numberOfSelectedNodes: this.selectedNodes.size,
       numberOfSelectedLinks: this.selectedLinks.size,
@@ -858,6 +931,7 @@ class ReportKnowledgeGraphComponent extends Component {
               this.state.createdBy,
               ignoredStixCoreObjectsTypes,
               this.state.selectedTimeRangeInterval,
+              this.state.keyword,
             ),
           });
         });
@@ -866,14 +940,14 @@ class ReportKnowledgeGraphComponent extends Component {
 
   handleCloseRelationEdition(relationId) {
     setTimeout(() => {
-      fetchQuery(reportKnowledgeGraphStixCoreRelationshipQuery, {
+      fetchQuery(reportKnowledgeGraphStixRelationshipQuery, {
         id: relationId,
       })
         .toPromise()
         .then((data) => {
-          const { stixCoreRelationship } = data;
+          const { stixRelationship } = data;
           this.graphObjects = R.map(
-            (n) => (n.id === stixCoreRelationship.id ? stixCoreRelationship : n),
+            (n) => (n.id === stixRelationship.id ? stixRelationship : n),
             this.graphObjects,
           );
           this.graphData = buildGraphData(
@@ -889,6 +963,7 @@ class ReportKnowledgeGraphComponent extends Component {
               this.state.createdBy,
               ignoredStixCoreObjectsTypes,
               this.state.selectedTimeRangeInterval,
+              this.state.keyword,
             ),
           });
         });
@@ -923,6 +998,7 @@ class ReportKnowledgeGraphComponent extends Component {
           this.state.createdBy,
           ignoredStixCoreObjectsTypes,
           this.state.selectedTimeRangeInterval,
+          this.state.keyword,
         ),
       },
       () => {
@@ -944,6 +1020,22 @@ class ReportKnowledgeGraphComponent extends Component {
         this.state.createdBy,
         [],
         selectedTimeRangeInterval,
+        this.state.keyword,
+      ),
+    });
+  }
+
+  handleSearch(keyword) {
+    this.setState({
+      keyword,
+      graphData: applyFilters(
+        this.graphData,
+        this.state.stixCoreObjectsTypes,
+        this.state.markedBy,
+        this.state.createdBy,
+        [],
+        this.state.selectedTimeRangeInterval,
+        keyword,
       ),
     });
   }
@@ -1030,6 +1122,7 @@ class ReportKnowledgeGraphComponent extends Component {
           selectedTimeRangeInterval={selectedTimeRangeInterval}
           handleTimeRangeChange={this.handleTimeRangeChange.bind(this)}
           timeRangeValues={timeRangeValues}
+          handleSearch={this.handleSearch.bind(this)}
         />
         {mode3D ? (
           <ForceGraph3D
@@ -1115,7 +1208,7 @@ class ReportKnowledgeGraphComponent extends Component {
             }}
             onLinkClick={this.handleLinkClick.bind(this)}
             onBackgroundClick={this.handleBackgroundClick.bind(this)}
-            cooldownTicks={modeFixed ? 0 : 'Infinity'}
+            cooldownTicks={modeFixed ? 0 : undefined}
             dagMode={
               // eslint-disable-next-line no-nested-ternary
               modeTree === 'horizontal'
@@ -1198,7 +1291,7 @@ class ReportKnowledgeGraphComponent extends Component {
             }}
             onLinkClick={this.handleLinkClick.bind(this)}
             onBackgroundClick={this.handleBackgroundClick.bind(this)}
-            cooldownTicks={modeFixed ? 0 : 'Infinity'}
+            cooldownTicks={modeFixed ? 0 : undefined}
             dagMode={
               // eslint-disable-next-line no-nested-ternary
               modeTree === 'horizontal'
@@ -1365,6 +1458,60 @@ const ReportKnowledgeGraph = createFragmentContainer(
                 relationship_type
                 start_time
                 stop_time
+                confidence
+                created
+                is_inferred
+                from {
+                  ... on BasicObject {
+                    id
+                    entity_type
+                    parent_types
+                  }
+                  ... on BasicRelationship {
+                    id
+                    entity_type
+                    parent_types
+                  }
+                  ... on StixCoreRelationship {
+                    relationship_type
+                  }
+                }
+                to {
+                  ... on BasicObject {
+                    id
+                    entity_type
+                    parent_types
+                  }
+                  ... on BasicRelationship {
+                    id
+                    entity_type
+                    parent_types
+                  }
+                  ... on StixCoreRelationship {
+                    relationship_type
+                  }
+                }
+                created_at
+                createdBy {
+                  ... on Identity {
+                    id
+                    name
+                    entity_type
+                  }
+                }
+                objectMarking {
+                  edges {
+                    node {
+                      id
+                      definition
+                    }
+                  }
+                }
+              }
+              ... on StixSightingRelationship {
+                relationship_type
+                first_seen
+                last_seen
                 confidence
                 created
                 is_inferred

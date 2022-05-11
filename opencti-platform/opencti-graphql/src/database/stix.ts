@@ -257,12 +257,12 @@ const buildObservableInputFromExtension = (stix: StixCyberObject): MutationStixC
     stix_id: stix.id,
     // createIndicator - Indicator will be created through stream if needed.
     type: stix.extensions[STIX_EXT_OCTI].type,
-    createdBy: stix.extensions[STIX_EXT_OCTI_SCO].created_by_ref,
-    externalReferences: buildExternalRefs(stix.extensions[STIX_EXT_OCTI_SCO]),
-    objectLabel: stix.extensions[STIX_EXT_OCTI_SCO].labels,
     objectMarking: stix.object_marking_refs,
-    x_opencti_description: stix.extensions[STIX_EXT_OCTI_SCO].description,
-    x_opencti_score: stix.extensions[STIX_EXT_OCTI_SCO].score,
+    createdBy: stix.extensions[STIX_EXT_OCTI_SCO]?.created_by_ref,
+    objectLabel: stix.extensions[STIX_EXT_OCTI_SCO]?.labels,
+    x_opencti_score: stix.extensions[STIX_EXT_OCTI_SCO]?.score,
+    x_opencti_description: stix.extensions[STIX_EXT_OCTI_SCO]?.description,
+    externalReferences: buildExternalRefs(stix.extensions[STIX_EXT_OCTI_SCO] ?? {}),
     update: true
   };
 };
@@ -294,7 +294,7 @@ export const buildInputDataFromStix = (stix: StixObject): unknown => {
       description: relationship.description,
       externalReferences: buildExternalRefs(relationship),
       fromId: relationship.source_ref,
-      // killChainPhases: undefined, TODO JRI ????
+      // killChainPhases: undefined, // TODO JRI What about killChainPhases?
       lang: relationship.lang,
       modified: relationship.modified,
       objectLabel: buildLabelRefs(relationship),
@@ -413,10 +413,10 @@ export const buildInputDataFromStix = (stix: StixObject): unknown => {
       objectLabel: buildLabelRefs(attack),
       objectMarking: attack.object_marking_refs,
       revoked: attack.revoked,
-      x_mitre_id: attack.extensions[STIX_EXT_MITRE].id,
-      x_mitre_detection: attack.extensions[STIX_EXT_MITRE].detection,
-      x_mitre_permissions_required: attack.extensions[STIX_EXT_MITRE].permissions_required,
-      x_mitre_platforms: attack.extensions[STIX_EXT_MITRE].platforms,
+      x_mitre_id: attack.extensions[STIX_EXT_MITRE]?.id,
+      x_mitre_detection: attack.extensions[STIX_EXT_MITRE]?.detection,
+      x_mitre_permissions_required: attack.extensions[STIX_EXT_MITRE]?.permissions_required,
+      x_mitre_platforms: attack.extensions[STIX_EXT_MITRE]?.platforms,
       x_opencti_stix_ids: attack.extensions[STIX_EXT_OCTI].stix_ids,
       update: true,
     };
@@ -556,7 +556,7 @@ export const buildInputDataFromStix = (stix: StixObject): unknown => {
       objectLabel: buildLabelRefs(action),
       objectMarking: action.object_marking_refs,
       revoked: action.revoked,
-      x_mitre_id: action.extensions[STIX_EXT_MITRE].id,
+      x_mitre_id: action.extensions[STIX_EXT_MITRE]?.id,
       x_opencti_aliases: action.extensions[STIX_EXT_OCTI].aliases,
       x_opencti_stix_ids: action.extensions[STIX_EXT_OCTI].stix_ids,
       update: true,
@@ -689,7 +689,7 @@ export const buildInputDataFromStix = (stix: StixObject): unknown => {
       revoked: indicator.revoked,
       valid_from: indicator.valid_from,
       valid_until: indicator.valid_until,
-      x_mitre_platforms: indicator.extensions[STIX_EXT_MITRE].platforms,
+      x_mitre_platforms: indicator.extensions[STIX_EXT_MITRE]?.platforms,
       x_opencti_detection: indicator.extensions[STIX_EXT_OCTI].detection,
       x_opencti_main_observable_type: indicator.extensions[STIX_EXT_OCTI].main_observable_type,
       x_opencti_score: indicator.extensions[STIX_EXT_OCTI].score,
@@ -1052,7 +1052,7 @@ export const buildInputDataFromStix = (stix: StixObject): unknown => {
       mime_type: artifact.mime_type,
       payload_bin: artifact.payload_bin,
       url: artifact.url,
-      x_opencti_additional_names: artifact.extensions[STIX_EXT_OCTI_SCO].additional_names
+      x_opencti_additional_names: artifact.extensions[STIX_EXT_OCTI_SCO]?.additional_names
     };
     return { ...buildObservableInputFromExtension(artifact), Artifact: input } as MutationStixCyberObservableAddArgs;
   }
@@ -1068,7 +1068,7 @@ export const buildInputDataFromStix = (stix: StixObject): unknown => {
       name: file.name,
       name_enc: file.name_enc,
       size: file.size,
-      x_opencti_additional_names: file.extensions[STIX_EXT_OCTI_SCO].additional_names
+      x_opencti_additional_names: file.extensions[STIX_EXT_OCTI_SCO]?.additional_names
     };
     return { ...buildObservableInputFromExtension(file), StixFile: input } as MutationStixCyberObservableAddArgs;
   }
@@ -1517,13 +1517,13 @@ export const stixCyberObservableRelationshipsMapping = {
   [`${ENTITY_HASHED_OBSERVABLE_ARTIFACT}_${ENTITY_EMAIL_MIME_PART_TYPE}`]: [RELATION_BODY_RAW],
   [`${ENTITY_HASHED_OBSERVABLE_ARTIFACT}_${ENTITY_HASHED_OBSERVABLE_STIX_FILE}`]: [OBS_RELATION_CONTENT],
   [`${ENTITY_HASHED_OBSERVABLE_ARTIFACT}_${ENTITY_NETWORK_TRAFFIC}`]: [RELATION_SRC_PAYLOAD, RELATION_DST_PAYLOAD],
-  [`${ENTITY_HASHED_OBSERVABLE_ARTIFACT}_${ENTITY_TYPE_MALWARE}`]: [RELATION_SAMPLE],
+  [`${ENTITY_TYPE_MALWARE}_${ENTITY_HASHED_OBSERVABLE_ARTIFACT}`]: [RELATION_SAMPLE],
+  [`${ENTITY_TYPE_MALWARE}_${ENTITY_HASHED_OBSERVABLE_STIX_FILE}`]: [RELATION_SAMPLE],
   [`${ENTITY_HASHED_OBSERVABLE_STIX_FILE}_${ABSTRACT_STIX_CYBER_OBSERVABLE}`]: [RELATION_CONTAINS],
   [`${ENTITY_HASHED_OBSERVABLE_STIX_FILE}_${ENTITY_DIRECTORY}`]: [RELATION_PARENT_DIRECTORY],
   [`${ENTITY_HASHED_OBSERVABLE_STIX_FILE}_${ENTITY_EMAIL_MIME_PART_TYPE}`]: [RELATION_BODY_RAW],
   [`${ENTITY_HASHED_OBSERVABLE_STIX_FILE}_${ENTITY_HASHED_OBSERVABLE_ARTIFACT}`]: [RELATION_CONTAINS],
   [`${ENTITY_HASHED_OBSERVABLE_STIX_FILE}_${ENTITY_PROCESS}`]: [RELATION_IMAGE],
-  [`${ENTITY_HASHED_OBSERVABLE_STIX_FILE}_${ENTITY_TYPE_MALWARE}`]: [RELATION_SAMPLE],
   [`${ENTITY_IPV4_ADDR}_${ENTITY_AUTONOMOUS_SYSTEM}`]: [OBS_RELATION_BELONGS_TO],
   [`${ENTITY_IPV4_ADDR}_${ENTITY_MAC_ADDR}`]: [OBS_RELATION_RESOLVES_TO],
   [`${ENTITY_IPV4_ADDR}_${ENTITY_NETWORK_TRAFFIC}`]: [RELATION_SRC, RELATION_DST],
@@ -1534,7 +1534,7 @@ export const stixCyberObservableRelationshipsMapping = {
   [`${ENTITY_NETWORK_TRAFFIC}_${ENTITY_NETWORK_TRAFFIC}`]: [RELATION_ENCAPSULATES, RELATION_ENCAPSULATED_BY],
   [`${ENTITY_PROCESS}_${ENTITY_NETWORK_TRAFFIC}`]: [RELATION_OPENED_CONNECTION],
   [`${ENTITY_PROCESS}_${ENTITY_PROCESS}`]: [RELATION_PARENT, RELATION_CHILD],
-  [`${ENTITY_SOFTWARE}_${ENTITY_TYPE_MALWARE}`]: [RELATION_OPERATING_SYSTEM],
+  [`${ENTITY_TYPE_MALWARE}_${ENTITY_SOFTWARE}`]: [RELATION_OPERATING_SYSTEM],
   [`${ENTITY_TYPE_CONTAINER_OBSERVED_DATA}_${ENTITY_HASHED_OBSERVABLE_STIX_FILE}`]: [OBS_RELATION_CONTENT],
   [`${ENTITY_USER_ACCOUNT}_${ENTITY_PROCESS}`]: [RELATION_CREATOR_USER],
   [`${ENTITY_USER_ACCOUNT}_${ENTITY_WINDOWS_REGISTRY_KEY}`]: [RELATION_CREATOR_USER],

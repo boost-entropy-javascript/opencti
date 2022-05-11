@@ -854,8 +854,9 @@ type Settings implements InternalObject & BasicObject {
   parent_types: [String]!
   # Settings
   platform_title: String
+  platform_favicon: String
   platform_url: String
-  platform_email: String
+  platform_email: String @auth(for: [SETTINGS])
   platform_modules: [Module]
   platform_providers: [Provider]
   platform_language: String
@@ -3618,7 +3619,7 @@ type Indicator implements BasicObject & StixObject & StixCoreObject & StixDomain
   x_opencti_main_observable_type: String
   x_mitre_platforms: [String]
   killChainPhases: KillChainPhaseConnection
-  observables: StixCyberObservableConnection
+  observables(first: Int): StixCyberObservableConnection
   # Technical
   creator: User
   toStix: String
@@ -5362,7 +5363,7 @@ interface StixCyberObservable {
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -5444,7 +5445,7 @@ type AutonomousSystem implements BasicObject & StixObject & StixCoreObject & Sti
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -5535,7 +5536,7 @@ type Directory implements BasicObject & StixObject & StixCoreObject & StixCyberO
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -5630,7 +5631,7 @@ type DomainName implements BasicObject & StixObject & StixCoreObject & StixCyber
   observable_value: String!
   x_opencti_score: Int
   x_opencti_description: String
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -5717,7 +5718,7 @@ type EmailAddr implements BasicObject & StixObject & StixCoreObject & StixCyberO
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -5806,7 +5807,7 @@ type EmailMessage implements BasicObject & StixObject & StixCoreObject & StixCyb
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -5905,7 +5906,7 @@ type EmailMimePartType implements BasicObject & StixObject & StixCoreObject & St
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -6003,7 +6004,7 @@ interface HashedObservable {
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -6087,7 +6088,7 @@ type Artifact implements BasicObject & StixObject & StixCoreObject & StixCyberOb
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -6187,7 +6188,7 @@ type StixFile implements BasicObject & StixObject & StixCoreObject & StixCyberOb
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -6294,7 +6295,7 @@ type X509Certificate implements BasicObject & StixObject & StixCoreObject & Stix
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -6404,7 +6405,7 @@ type IPv4Addr implements BasicObject & StixObject & StixCoreObject & StixCyberOb
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -6493,7 +6494,7 @@ type IPv6Addr implements BasicObject & StixObject & StixCoreObject & StixCyberOb
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -6580,7 +6581,7 @@ type MacAddr implements BasicObject & StixObject & StixCoreObject & StixCyberObs
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -6667,7 +6668,7 @@ type Mutex implements BasicObject & StixObject & StixCoreObject & StixCyberObser
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -6754,7 +6755,7 @@ type NetworkTraffic implements BasicObject & StixObject & StixCoreObject & StixC
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -6860,7 +6861,7 @@ type Process implements BasicObject & StixObject & StixCoreObject & StixCyberObs
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -6958,7 +6959,7 @@ type Software implements BasicObject & StixObject & StixCoreObject & StixCyberOb
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -7055,7 +7056,7 @@ type Url implements BasicObject & StixObject & StixCoreObject & StixCyberObserva
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -7142,7 +7143,7 @@ type UserAccount implements BasicObject & StixObject & StixCoreObject & StixCybe
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -7256,7 +7257,7 @@ type WindowsRegistryKey implements BasicObject & StixObject & StixCoreObject & S
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -7347,7 +7348,7 @@ type WindowsRegistryValueType implements BasicObject & StixObject & StixCoreObje
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -7438,7 +7439,7 @@ type X509V3ExtensionsType implements BasicObject & StixObject & StixCoreObject &
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -7555,7 +7556,7 @@ type CryptographicKey implements BasicObject & StixObject & StixCoreObject & Sti
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -7642,7 +7643,7 @@ type CryptocurrencyWallet implements BasicObject & StixObject & StixCoreObject &
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -7729,7 +7730,7 @@ type Hostname implements BasicObject & StixObject & StixCoreObject & StixCyberOb
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -7816,7 +7817,7 @@ type Text implements BasicObject & StixObject & StixCoreObject & StixCyberObserv
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -7903,7 +7904,7 @@ type UserAgent implements BasicObject & StixObject & StixCoreObject & StixCyberO
   x_opencti_score: Int
   x_opencti_description: String
   observable_value: String!
-  indicators: IndicatorConnection
+  indicators(first: Int): IndicatorConnection
   stixCyberObservableRelationships(
     first: Int
     after: ID
@@ -8392,6 +8393,7 @@ type StixSightingRelationship implements BasicRelationship & StixRelationship {
   to: StixObjectOrStixRelationship
   x_opencti_inferences: [Inference]
   # StixSightingRelationship
+  relationship_type: String!
   description: String
   first_seen: DateTime
   last_seen: DateTime
@@ -8437,6 +8439,7 @@ input StixSightingRelationshipAddInput {
 
 ############## StixCyberObservableRelationships
 enum StixCyberObservableRelationshipsOrdering {
+  relationship_type
   entity_type
   confidence
   start_time
@@ -8566,7 +8569,7 @@ input StixMetaRelationshipsAddInput {
 
 type Query {
   ###### TEST
-  stix(id: String!): String
+  stix(id: String!): String @auth(for: [KNOWLEDGE])
   ###### INTERNAL
 
   platform_theme: String
@@ -9929,6 +9932,10 @@ type StixCyberObservableEditMutations {
 
 ######## STIX RELATIONSHIPS
 
+type StixRelationshipEditMutations {
+  delete: ID
+}
+
 ######## STIX CORE RELATIONSHIPS
 
 type StixCoreRelationshipEditMutations {
@@ -10181,6 +10188,7 @@ type Mutation {
   ): Artifact
 
   ######## STIX RELATIONSHIPS
+  stixRelationshipEdit(id: ID!): StixRelationshipEditMutations @auth(for: [KNOWLEDGE_KNUPDATE])
 
   ######## STIX CORE RELATIONSHIPS
   stixCoreRelationshipAdd(input: StixCoreRelationshipAddInput, reversedReturn: Boolean): StixCoreRelationship

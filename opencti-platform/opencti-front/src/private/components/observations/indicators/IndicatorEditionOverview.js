@@ -130,7 +130,7 @@ const indicatorValidation = (t) => Yup.object().shape({
   valid_until: Yup.date()
     .typeError(t('The value must be a date (YYYY-MM-DD)'))
     .required(t('This field is required')),
-  x_opencti_score: Yup.number(),
+  x_opencti_score: Yup.number().nullable(),
   description: Yup.string().nullable(),
   x_opencti_detection: Yup.boolean(),
   x_mitre_platforms: Yup.array(),
@@ -157,7 +157,7 @@ class IndicatorEditionOverviewComponent extends Component {
     const inputValues = R.pipe(
       R.dissoc('message'),
       R.dissoc('references'),
-      R.assoc('status_id', values.status_id?.value),
+      R.assoc('x_opencti_workflow_id', values.status_id?.value),
       R.assoc('createdBy', values.createdBy?.value),
       R.assoc('objectMarking', R.pluck('value', values.objectMarking)),
       R.toPairs,
