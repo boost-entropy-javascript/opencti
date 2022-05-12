@@ -5,7 +5,7 @@ import semver from 'semver';
 import { booleanConf, logApp, PLATFORM_VERSION } from './config/conf';
 import { elCreateIndexes, elIndexExists, searchEngineInit } from './database/engine';
 import { initializeAdminUser } from './config/providers';
-import { isStorageAlive } from './database/minio';
+import { initializeMinioBucket, isStorageAlive } from './database/minio';
 import { rabbitMQIsAlive } from './database/rabbitmq';
 import { addMarkingDefinition } from './domain/markingDefinition';
 import { addSettings } from './domain/settings';
@@ -113,8 +113,9 @@ export const CAPABILITIES = [
 ];
 // endregion
 
-// Check every dependencies
+// Check every dependency
 export const checkSystemDependencies = async () => {
+  logApp.info('[OPENCTI] Checking dependencies statuses');
   // Check if elasticsearch is available
   await searchEngineInit();
   logApp.info('[CHECK] Search engine is alive');
@@ -317,13 +318,13 @@ const isCompatiblePlatform = async () => {
 const platformInit = async (withMarkings = true) => {
   let lock;
   try {
-    await checkSystemDependencies();
     await cachePurge();
     lock = await lockResource([PLATFORM_LOCK_ID]);
     logApp.info('[INIT] Starting platform initialization');
     const alreadyExists = await isExistingPlatform();
     if (!alreadyExists) {
       logApp.info('[INIT] New platform detected, initialization...');
+      await initializeMinioBucket();
       await initializeSchema();
       await initializeMigration();
       await initializeData(withMarkings);
