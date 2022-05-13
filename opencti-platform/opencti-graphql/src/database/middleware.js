@@ -70,7 +70,8 @@ import {
   START_TIME,
   STOP_TIME,
   VALID_FROM,
-  VALID_UNTIL, X_DETECTION,
+  VALID_UNTIL,
+  X_DETECTION,
 } from '../schema/identifier';
 import {
   lockResource,
@@ -174,6 +175,8 @@ import {
 import { ENTITY_TYPE_LABEL, isStixMetaObject, stixMetaObjectsFieldsToBeUpdated } from '../schema/stixMetaObject';
 import { isStixSightingRelationship, STIX_SIGHTING_RELATIONSHIP } from '../schema/stixSightingRelationship';
 import {
+  ENTITY_HASHED_OBSERVABLE_ARTIFACT,
+  ENTITY_HASHED_OBSERVABLE_STIX_FILE,
   isStixCyberObservable,
   isStixCyberObservableHashedObservable,
   stixCyberObservableFieldsToBeUpdated,
@@ -208,10 +211,10 @@ import {
   STIX_ATTRIBUTE_TO_META_FIELD,
   STIX_EMBEDDED_RELATION_TO_FIELD,
 } from '../schema/stixEmbeddedRelationship';
-import { buildFilters, listEntities } from './repository';
+import { buildFilters } from './repository';
 import { askEnrich } from '../domain/enrichment';
 import { convertStoreToStix, isTrustedStixId } from './stix-converter';
-import { listAllRelations, listRelations } from './middleware-loader';
+import { listAllRelations, listEntities, listRelations } from './middleware-loader';
 import { uploadJobImport } from '../domain/file';
 import { getConfigCache } from '../manager/cacheManager';
 
@@ -1398,13 +1401,32 @@ export const updateAttributeRaw = (instance, inputs, opts = {}) => {
       impactedInputs.push(...aliasIns);
     }
   }
+  // In case of artifact and file, we need to keep name in additional names in case of upsert
+  const isNamedObservable = instanceType === ENTITY_HASHED_OBSERVABLE_ARTIFACT
+      || instanceType === ENTITY_HASHED_OBSERVABLE_STIX_FILE;
+  if (upsert && isNamedObservable) {
+    const nameInput = R.find((e) => e.key === NAME_FIELD, preparedElements);
+    // In Upsert mode, x_opencti_additional_names update must not be destructive, previous names must be kept
+    const additionalNamesInput = R.find((e) => e.key === ATTRIBUTE_ADDITIONAL_NAMES, preparedElements);
+    if (additionalNamesInput) {
+      const names = [...additionalNamesInput.value, ...(instance[ATTRIBUTE_ADDITIONAL_NAMES] ?? [])];
+      if (nameInput) { // If name will be replaced, add it in additional names
+        names.push(instance[NAME_FIELD]);
+      }
+      additionalNamesInput.value = R.uniq(names);
+    } else if (nameInput) { // If name will be replaced, add it in additional names
+      const newAdditional = [instance[NAME_FIELD], ...(instance[ATTRIBUTE_ADDITIONAL_NAMES] ?? [])];
+      const addNamesInput = { key: ATTRIBUTE_ADDITIONAL_NAMES, value: R.uniq(newAdditional) };
+      preparedElements.push(addNamesInput);
+    }
+  }
   // endregion
   // Update all needed attributes with inner elements if needed
   for (let index = 0; index < preparedElements.length; index += 1) {
     const input = preparedElements[index];
     const ins = innerUpdateAttribute(instance, input);
     if (ins.length > 0) {
-      const filteredIns = ins.filter((n) => n.key === input.key).filter((o) => {
+      const filteredIns = ins.filter((o) => {
         if (input.key === IDS_STIX) {
           const previous = getPreviousInstanceValue(o.key, instance);
           if (o.operation === UPDATE_OPERATION_ADD) {
@@ -1719,8 +1741,7 @@ export const updateAttribute = async (user, id, type, inputs, opts = {}) => {
     if (updatedInputs.length > 0) {
       const message = generateUpdateMessage(updatedInputs);
       const commit = opts.commitMessage ? { message: opts.commitMessage, references: opts.references } : undefined;
-      const updateOpts = { commit, publishStreamEvent: true };
-      const event = await storeUpdateEvent(user, initial, updatedInstance, message, updateOpts);
+      const event = await storeUpdateEvent(user, initial, updatedInstance, message, { commit });
       return { element: updatedInstance, event };
     }
     // Return updated element after waiting for it.
@@ -2419,7 +2440,7 @@ const buildRelationData = async (user, input, opts = {}) => {
     relations: relToCreate.map((r) => r.relation)
   };
 };
-export const createRelationRaw = async (user, input, opts = { publishStreamEvent: true }) => {
+export const createRelationRaw = async (user, input, opts = {}) => {
   let lock;
   const { fromRule, locks = [] } = opts;
   const { fromId, toId, relationship_type: relationshipType } = input;
@@ -2750,7 +2771,7 @@ const buildEntityData = async (user, input, type, opts = {}) => {
     relations: relToCreate.map((r) => r.relation), // Added meta relationships
   };
 };
-export const createEntityRaw = async (user, input, type, opts = { publishStreamEvent: true }) => {
+export const createEntityRaw = async (user, input, type, opts = {}) => {
   const enforceReferences = conf.get('app:enforce_references');
   const userCapabilities = R.flatten(user.capabilities.map((c) => c.name.split('_')));
   const isAllowedToByPass = userCapabilities.includes(BYPASS) || userCapabilities.includes(BYPASS_REFERENCE);
@@ -2915,7 +2936,7 @@ export const createInferredEntity = async (input, ruleContent, type) => {
 // endregion
 
 // region mutation deletion
-export const internalDeleteElementById = async (user, id, opts = { publishStreamEvent: true }) => {
+export const internalDeleteElementById = async (user, id, opts = {}) => {
   let lock;
   let event;
   const element = await storeLoadByIdWithRefs(user, id);
@@ -2981,7 +3002,7 @@ const deleteElements = async (user, elements, opts = {}) => {
   }
   return deletedIds;
 };
-export const deleteElementById = async (user, elementId, type, opts = { publishStreamEvent: true }) => {
+export const deleteElementById = async (user, elementId, type, opts = {}) => {
   if (R.isNil(type)) {
     /* istanbul ignore next */
     throw FunctionalError('You need to specify a type when deleting an entity');
@@ -3020,12 +3041,13 @@ export const deleteInferredRuleElement = async (rule, instance, deletedDependenc
     if (rebuildRuleContent.length === 0) {
       // If current inference is only base on one rule, we can safely delete it.
       if (monoRule) {
-        const { event } = await internalDeleteElementById(RULE_MANAGER_USER, instance.id, { publishStreamEvent: false });
+        const { event } = await internalDeleteElementById(RULE_MANAGER_USER, instance.id);
         derivedEvents.push(event);
       } else {
         // If not we need to clean the rule and keep the element for other rules.
         const input = { [completeRuleName]: null };
-        const { event } = await upsertRelationRule(instance, input, { fromRule, ruleOverride: true });
+        const upsertOpts = { fromRule, ruleOverride: true };
+        const { event } = await upsertRelationRule(instance, input, upsertOpts);
         if (event) {
           derivedEvents.push(event);
         }
@@ -3033,7 +3055,8 @@ export const deleteInferredRuleElement = async (rule, instance, deletedDependenc
     } else {
       // Rule still have other explanation, update the rule
       const input = { [completeRuleName]: rebuildRuleContent };
-      const { event } = await upsertRelationRule(instance, input, { fromRule, ruleOverride: true });
+      const ruleOpts = { fromRule, ruleOverride: true };
+      const { event } = await upsertRelationRule(instance, input, ruleOpts);
       if (event) {
         derivedEvents.push(event);
       }
