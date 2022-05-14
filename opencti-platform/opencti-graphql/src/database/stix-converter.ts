@@ -265,7 +265,7 @@ const buildStixDomain = (instance: StoreEntity | StoreRelation): S.StixDomainObj
   return {
     ...buildStixObject(instance),
     created: instance.created,
-    modified: instance.updated_at, // TODO JRI Do we need to assign updated_at in modified?
+    modified: instance.modified,
     revoked: instance.revoked,
     confidence: instance.confidence,
     lang: instance.lang,
@@ -412,7 +412,7 @@ const convertVulnerabilityToStix = (instance: StoreEntity, type: string): SDO.St
         base_score: instance.x_opencti_base_score,
         base_severity: instance.x_opencti_base_severity,
         confidentiality_impact: instance.x_opencti_confidentiality_impact,
-        integrity_impact: instance.x_opencti_integrity_impact
+        integrity_impact: instance.x_opencti_integrity_impact,
       })
     }
   };
@@ -643,7 +643,7 @@ const convertCryptographicKeyToStix = (instance: StoreCyberObservable, type: str
   };
 };
 const convertDirectoryToStix = (instance: StoreCyberObservable, type: string): SCO.StixDirectory => {
-  assertType(ENTITY_CRYPTOGRAPHIC_KEY, type);
+  assertType(ENTITY_DIRECTORY, type);
   return {
     ...buildStixCyberObservable(instance),
     path: instance.path,

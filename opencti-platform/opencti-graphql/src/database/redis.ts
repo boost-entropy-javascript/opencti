@@ -49,7 +49,7 @@ const BASE_DATABASE = 0; // works key for tracking / stream
 const CONTEXT_DATABASE = 1; // locks / user context
 const REDIS_EXPIRE_TIME = 90;
 
-const isStixData = (instance: StoreObject) => isStixObject(instance.entity_type) || isStixRelationship(instance.entity_type);
+export const isStixData = (instance: StoreObject) => isStixObject(instance.entity_type) || isStixRelationship(instance.entity_type);
 
 const isStreamPublishable = (instance: StoreObject) => INCLUDE_INFERENCES || !isInferredIndex(instance._index);
 
@@ -361,8 +361,9 @@ const pushToStream = async (client: Redis, instance: StoreObject, event: Event) 
   if (isStreamPublishable(instance)) {
     if (streamTrimming) {
       await client.call('XADD', REDIS_STREAM_NAME, 'MAXLEN', '~', streamTrimming, '*', ...mapJSToStream(event));
+    } else {
+      await client.call('XADD', REDIS_STREAM_NAME, '*', ...mapJSToStream(event));
     }
-    await client.call('XADD', REDIS_STREAM_NAME, '*', ...mapJSToStream(event));
   }
 };
 

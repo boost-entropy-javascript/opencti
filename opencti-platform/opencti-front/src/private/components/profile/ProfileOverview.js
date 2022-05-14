@@ -40,8 +40,11 @@ const styles = () => ({
 });
 
 const profileOverviewFieldPatch = graphql`
-  mutation ProfileOverviewFieldPatchMutation($input: [EditInput]!) {
-    meEdit(input: $input) {
+  mutation ProfileOverviewFieldPatchMutation(
+    $input: [EditInput]!
+    $password: String
+  ) {
+    meEdit(input: $input, password: $password) {
       ...UserEditionOverview_user
     }
   }
@@ -68,6 +71,7 @@ const userValidation = (t) => Yup.object().shape({
 });
 
 const passwordValidation = (t) => Yup.object().shape({
+  current_password: Yup.string().required(t('This field is required')),
   password: Yup.string().required(t('This field is required')),
   confirmation: Yup.string()
     .oneOf([Yup.ref('password'), null], t('The values do not match'))
@@ -76,7 +80,7 @@ const passwordValidation = (t) => Yup.object().shape({
 
 const ProfileOverviewComponent = (props) => {
   const { t, me, classes, fldt, subscriptionStatus, about } = props;
-  const external = false;
+  const { external } = me;
   const initialValues = pick(
     [
       'name',
@@ -114,6 +118,7 @@ const ProfileOverviewComponent = (props) => {
       mutation: profileOverviewFieldPatch,
       variables: {
         input: field,
+        password: values.current_password,
       },
       setSubmitting,
       onCompleted: () => {
@@ -151,7 +156,7 @@ const ProfileOverviewComponent = (props) => {
                     component={TextField}
                     variant="standard"
                     name="user_email"
-                    disabled={true}
+                    disabled={external}
                     label={t('Email address')}
                     fullWidth={true}
                     style={{ marginTop: 20 }}
@@ -238,14 +243,14 @@ const ProfileOverviewComponent = (props) => {
               disabled={!subscriptionStatus}
             />
             {!subscriptionStatus && (
-              <Alert severity="info">
+              <Alert severity="info" style={{ marginTop: 20 }}>
                 {t(
                   'To use this feature, your platform administrator must enable the subscription manager in the config.',
                 )}
               </Alert>
             )}
             {me.userSubscriptions.edges.length > 0 ? (
-              <div style={{ marginTop: 20 }}>
+              <div style={{ marginTop: 10 }}>
                 <List>
                   {me.userSubscriptions.edges.map((userSubscriptionEdge) => {
                     const userSubscription = userSubscriptionEdge.node;
@@ -298,53 +303,67 @@ const ProfileOverviewComponent = (props) => {
           </Paper>
         </Grid>
         <Grid item={true} xs={6}>
-          {!external && (
-            <Paper classes={{ root: classes.panel }} variant="outlined">
-              <Typography variant="h1" gutterBottom={true}>
-                {t('Password')}
-              </Typography>
-              <Formik
-                enableReinitialize={true}
-                initialValues={{ password: '', confirmation: '' }}
-                validationSchema={passwordValidation(t)}
-                onSubmit={handleSubmitPasswords}
-              >
-                {({ submitForm, isSubmitting }) => (
-                  <Form style={{ margin: '20px 0 20px 0' }}>
-                    <Field
-                      component={TextField}
-                      variant="standard"
-                      name="password"
-                      label={t('Password')}
-                      type="password"
-                      fullWidth={true}
-                    />
-                    <Field
-                      component={TextField}
-                      variant="standard"
-                      name="confirmation"
-                      label={t('Confirmation')}
-                      type="password"
-                      fullWidth={true}
-                      style={{ marginTop: 20 }}
-                    />
-                    <div style={{ marginTop: 20 }}>
-                      <Button
-                        variant="contained"
-                        type="button"
-                        color="primary"
-                        onClick={submitForm}
-                        disabled={isSubmitting}
-                        classes={{ root: classes.button }}
-                      >
-                        {t('Update')}
-                      </Button>
-                    </div>
-                  </Form>
-                )}
-              </Formik>
-            </Paper>
-          )}
+          <Paper classes={{ root: classes.panel }} variant="outlined">
+            <Typography variant="h1" gutterBottom={true}>
+              {t('Password')}
+            </Typography>
+            <Formik
+              enableReinitialize={true}
+              initialValues={{
+                current_password: '',
+                password: '',
+                confirmation: '',
+              }}
+              validationSchema={passwordValidation(t)}
+              onSubmit={handleSubmitPasswords}
+            >
+              {({ submitForm, isSubmitting }) => (
+                <Form style={{ margin: '20px 0 20px 0' }}>
+                  <Field
+                    component={TextField}
+                    variant="standard"
+                    name="current_password"
+                    label={t('Current password')}
+                    type="password"
+                    fullWidth={true}
+                    disabled={external}
+                  />
+                  <Field
+                    component={TextField}
+                    variant="standard"
+                    name="password"
+                    label={t('New password')}
+                    type="password"
+                    fullWidth={true}
+                    style={{ marginTop: 20 }}
+                    disabled={external}
+                  />
+                  <Field
+                    component={TextField}
+                    variant="standard"
+                    name="confirmation"
+                    label={t('Confirmation')}
+                    type="password"
+                    fullWidth={true}
+                    style={{ marginTop: 20 }}
+                    disabled={external}
+                  />
+                  <div style={{ marginTop: 20 }}>
+                    <Button
+                      variant="contained"
+                      type="button"
+                      color="primary"
+                      onClick={submitForm}
+                      disabled={external || isSubmitting}
+                      classes={{ root: classes.button }}
+                    >
+                      {t('Update')}
+                    </Button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
+          </Paper>
         </Grid>
         <Grid item={true} xs={6}>
           <Paper classes={{ root: classes.panel }} variant="outlined">

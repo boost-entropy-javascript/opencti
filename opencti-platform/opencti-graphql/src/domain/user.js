@@ -3,7 +3,7 @@ import { map } from 'ramda';
 import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import { delEditContext, delUserContext, notify, setEditContext } from '../database/redis';
-import { AuthenticationFailure, FunctionalError } from '../config/errors';
+import { AuthenticationFailure, ForbiddenAccess, FunctionalError } from '../config/errors';
 import { BUS_TOPICS, logApp, logAudit, OPENCTI_SESSION } from '../config/conf';
 import {
   batchListThroughGetTo,
@@ -399,7 +399,20 @@ export const addBookmark = async (user, id, type) => {
   return storeLoadById(user, id, type);
 };
 
-export const meEditField = (user, userId, inputs) => {
+export const meEditField = (user, userId, inputs, password = null) => {
+  const input = R.head(inputs);
+  const { key } = input;
+  if (key === 'password') {
+    const dbPassword = user.session_password;
+    const match = bcrypt.compareSync(password, dbPassword);
+    if (!match) throw FunctionalError('The current password you have provided is not valid');
+  }
+  if (user.external && (key === 'user_email' || key === 'user_name')) {
+    throw ForbiddenAccess();
+  }
+  if (key === 'api_token') {
+    throw ForbiddenAccess();
+  }
   return userEditField(user, userId, inputs);
 };
 
@@ -527,6 +540,7 @@ const buildSessionUser = (user) => {
     internal_id: user.internal_id,
     user_email: user.user_email,
     name: user.name,
+    external: user.external,
     capabilities: user.capabilities.map((c) => ({ id: c.id, internal_id: c.internal_id, name: c.name })),
     allowed_marking: user.allowed_marking.map((m) => ({
       id: m.id,
