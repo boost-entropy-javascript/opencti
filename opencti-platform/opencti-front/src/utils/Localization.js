@@ -1092,6 +1092,7 @@ const i18n = {
         'Aucun historique à propos cette entité.',
       'No relations history about this entity.':
         'Aucun historique de relations à propos cette entité.',
+      'Already in plat.': 'Déjà dans la plat.',
       // Explore
       'Kill chains': 'Kill chains',
       'Explore the victims and the targets of the dataset through space and time.':
@@ -1220,8 +1221,10 @@ const i18n = {
       relationship_obs_content: 'content',
       'relationship_resolves-to': 'résout',
       'relationship_obs_resolves-to': 'résout',
-      'relationship_belongs-to': 'belongs-to',
-      'relationship_obs_belongs-to': 'belongs-to',
+      'relationship_belongs-to': 'appartient à ',
+      'relationship_obs_belongs-to': 'appartient à ',
+      'relationship_cooperates-with': 'coopère avec',
+      'relationship_participates-in': 'participe à',
       relationship_contains: 'contient',
       relationship_values: 'valeurs',
       'relationship_stix-sighting-relationship': 'détecté dans/en',
@@ -2407,6 +2410,7 @@ const i18n = {
       'Notes about this relationship': '关于此关系的注释',
       'No history about this entity.': '关于此实体的历史。',
       'No relations history about this entity.': '尚无关于此实体的关系历史',
+      'Already in plat.': '经在平台',
       // Explore
       'Kill chains': '杀伤链',
       'Explore the victims and the targets of the dataset through space and time.':
@@ -2538,6 +2542,8 @@ const i18n = {
       'relationship_obs_resolves-to': '解析为',
       'relationship_belongs-to': '属于',
       'relationship_obs_belongs-to': '属于',
+      'relationship_cooperates-with': '与合作',
+      'relationship_participates-in': '参与',
       relationship_contains: '包含',
       relationship_values: '价值观',
       'relationship_stix-sighting-relationship': '目击关系',
@@ -2794,7 +2800,7 @@ const i18n = {
       // Relations
       relationship_All: 'All types of relationship',
       relationship_object: 'contains',
-      'relationship_x_opencti_linked-to': 'linked-to',
+      'relationship_x_opencti_linked-to': 'linked to',
       relationship_to: 'to',
       relationship_from: 'from',
       relationship_cc: 'cc',
@@ -2803,10 +2809,12 @@ const i18n = {
       relationship_dst: 'dst',
       relationship_sender: 'sender',
       relationship_obs_content: 'content',
-      'relationship_resolves-to': 'resolves-to',
-      'relationship_obs_resolves-to': 'resolves-to',
-      'relationship_belongs-to': 'belongs-to',
-      'relationship_obs_belongs-to': 'belongs-to',
+      'relationship_resolves-to': 'resolves to',
+      'relationship_obs_resolves-to': 'resolves to',
+      'relationship_belongs-to': 'belongs to',
+      'relationship_obs_belongs-to': 'belongs to',
+      'relationship_cooperates-with': 'cooperates with',
+      'relationship_participates-in': 'participates in',
       relationship_contains: 'contains',
       relationship_values: 'values',
       'relationship_stix-sighting-relationship': 'sighted in/at',

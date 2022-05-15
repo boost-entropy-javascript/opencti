@@ -113,7 +113,7 @@ class ThreatActorKnowledgeComponent extends Component {
           render={(routeProps) => (
             <EntityStixCoreRelationships
               entityId={threatActor.id}
-              relationshipTypes={['part-of']}
+              relationshipTypes={['part-of', 'cooperates-with']}
               targetStixDomainObjectTypes={['Threat-Actor']}
               entityLink={link}
               allDirections={true}
@@ -141,10 +141,10 @@ class ThreatActorKnowledgeComponent extends Component {
           render={(routeProps) => (
             <EntityStixCoreRelationships
               entityId={threatActor.id}
-              relationshipTypes={['attributed-to']}
+              relationshipTypes={['attributed-to', 'participates-in']}
               targetStixDomainObjectTypes={['Campaign']}
               entityLink={link}
-              isRelationReversed={true}
+              allDirections={true}
               {...routeProps}
             />
           )}
