@@ -417,7 +417,7 @@ export const loadEntity = async (user, entityTypes, args = {}) => {
   if (entities.length > 1) {
     throw DatabaseError('Expect only one response', { entityTypes, args });
   }
-  return entities && R.head(entities);
+  return R.head(entities);
 };
 // endregion
 
@@ -2248,7 +2248,6 @@ const upsertElementRaw = async (user, element, type, updatePatch) => {
   // TODO JRI Upsert single refs specific for generic
   // endregion
   // If modification must be done, reload the instance with dependencies to allow complete stix generation
-  let resolvedInstance = element;
   if (impactedInputs.length > 0 && patchInputs.length === 0) {
     throw UnsupportedError('[OPENCTI] Upsert will produce only internal modification', { element, input: updatePatch });
   }
@@ -2263,7 +2262,7 @@ const upsertElementRaw = async (user, element, type, updatePatch) => {
   // -------------------------------------------------------------------
   if (isUpdated) {
     // Resolve dependencies.
-    resolvedInstance = await loadAnyWithDependencies(user, element, {
+    const resolvedInstance = await loadAnyWithDependencies(user, element, {
       dependencyTypes: [ABSTRACT_STIX_META_RELATIONSHIP, ABSTRACT_STIX_CYBER_OBSERVABLE_RELATIONSHIP],
       onlyMarking: false,
       fullResolve: false,
@@ -2316,7 +2315,7 @@ const isRelationConsistent = (relationshipType, from, to) => {
     return false;
   }
 };
-const buildRelationData = async (user, input, opts = {}) => {
+const buildRelationData = async (input, opts = {}) => {
   const { fromRule } = opts;
   const { from, to, relationship_type: relationshipType } = input;
   // 01. Generate the ID
@@ -2570,7 +2569,7 @@ export const createRelationRaw = async (user, input, opts = {}) => {
         }
       }
       // Just build a standard relationship
-      dataRel = await buildRelationData(user, resolvedInput, opts);
+      dataRel = await buildRelationData(resolvedInput, opts);
     }
     // Index the created element
     await indexCreatedElement(dataRel);
