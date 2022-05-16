@@ -6080,6 +6080,8 @@ export type Mutation = {
   stixCoreRelationshipAdd?: Maybe<StixCoreRelationship>;
   stixCoreRelationshipDelete: Scalars['Boolean'];
   stixCoreRelationshipEdit?: Maybe<StixCoreRelationshipEditMutations>;
+  stixCoreRelationshipsExportAsk?: Maybe<FileConnection>;
+  stixCoreRelationshipsExportPush?: Maybe<Scalars['Boolean']>;
   stixCyberObservableAdd?: Maybe<StixCyberObservable>;
   stixCyberObservableEdit?: Maybe<StixCyberObservableEditMutations>;
   stixCyberObservableRelationshipAdd?: Maybe<StixCyberObservableRelationship>;
@@ -6542,6 +6544,27 @@ export type MutationStixCoreRelationshipDeleteArgs = {
 
 export type MutationStixCoreRelationshipEditArgs = {
   id: Scalars['ID'];
+};
+
+
+export type MutationStixCoreRelationshipsExportAskArgs = {
+  context?: InputMaybe<Scalars['String']>;
+  exportType: Scalars['String'];
+  filterMode?: InputMaybe<FilterMode>;
+  filters?: InputMaybe<Array<InputMaybe<StixCoreRelationshipsFiltering>>>;
+  format: Scalars['String'];
+  maxMarkingDefinition?: InputMaybe<Scalars['String']>;
+  orderBy?: InputMaybe<StixCoreRelationshipsOrdering>;
+  orderMode?: InputMaybe<OrderingMode>;
+  search?: InputMaybe<Scalars['String']>;
+  type: Scalars['String'];
+};
+
+
+export type MutationStixCoreRelationshipsExportPushArgs = {
+  file: Scalars['Upload'];
+  listFilters?: InputMaybe<Scalars['String']>;
+  type: Scalars['String'];
 };
 
 
@@ -8606,6 +8629,7 @@ export type Query = {
   stixCoreRelationship?: Maybe<StixCoreRelationship>;
   stixCoreRelationships?: Maybe<StixCoreRelationshipConnection>;
   stixCoreRelationshipsDistribution?: Maybe<Array<Maybe<Distribution>>>;
+  stixCoreRelationshipsExportFiles?: Maybe<FileConnection>;
   stixCoreRelationshipsNumber?: Maybe<Number>;
   stixCoreRelationshipsTimeSeries?: Maybe<Array<Maybe<TimeSeries>>>;
   stixCyberObservable?: Maybe<StixCyberObservable>;
@@ -9536,6 +9560,12 @@ export type QueryStixCoreRelationshipsDistributionArgs = {
   relationship_type?: InputMaybe<Scalars['String']>;
   startDate?: InputMaybe<Scalars['DateTime']>;
   toTypes?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+};
+
+
+export type QueryStixCoreRelationshipsExportFilesArgs = {
+  first?: InputMaybe<Scalars['Int']>;
+  type: Scalars['String'];
 };
 
 
@@ -11878,6 +11908,7 @@ export type StixCyberObservableEditMutationsRelationsAddArgs = {
 
 export type StixCyberObservableRelationship = BasicRelationship & StixRelationship & {
   __typename?: 'StixCyberObservableRelationship';
+  confidence?: Maybe<Scalars['Int']>;
   created_at: Scalars['DateTime'];
   editContext?: Maybe<Array<Maybe<EditUserContext>>>;
   entity_type: Scalars['String'];
@@ -11885,8 +11916,12 @@ export type StixCyberObservableRelationship = BasicRelationship & StixRelationsh
   fromRole?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
   is_inferred: Scalars['Boolean'];
+  notes?: Maybe<NoteConnection>;
+  objectMarking?: Maybe<MarkingDefinitionConnection>;
+  opinions?: Maybe<OpinionConnection>;
   parent_types: Array<Maybe<Scalars['String']>>;
   relationship_type: Scalars['String'];
+  reports?: Maybe<ReportConnection>;
   spec_version: Scalars['String'];
   standard_id: Scalars['String'];
   start_time?: Maybe<Scalars['DateTime']>;
@@ -11896,6 +11931,21 @@ export type StixCyberObservableRelationship = BasicRelationship & StixRelationsh
   updated_at: Scalars['DateTime'];
   x_opencti_inferences?: Maybe<Array<Maybe<Inference>>>;
   x_opencti_stix_ids?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+
+export type StixCyberObservableRelationshipNotesArgs = {
+  first?: InputMaybe<Scalars['Int']>;
+};
+
+
+export type StixCyberObservableRelationshipOpinionsArgs = {
+  first?: InputMaybe<Scalars['Int']>;
+};
+
+
+export type StixCyberObservableRelationshipReportsArgs = {
+  first?: InputMaybe<Scalars['Int']>;
 };
 
 export type StixCyberObservableRelationshipAddInput = {
@@ -18858,6 +18908,8 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   stixCoreRelationshipAdd?: Resolver<Maybe<ResolversTypes['StixCoreRelationship']>, ParentType, ContextType, Partial<MutationStixCoreRelationshipAddArgs>>;
   stixCoreRelationshipDelete?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationStixCoreRelationshipDeleteArgs, 'fromId' | 'relationship_type' | 'toId'>>;
   stixCoreRelationshipEdit?: Resolver<Maybe<ResolversTypes['StixCoreRelationshipEditMutations']>, ParentType, ContextType, RequireFields<MutationStixCoreRelationshipEditArgs, 'id'>>;
+  stixCoreRelationshipsExportAsk?: Resolver<Maybe<ResolversTypes['FileConnection']>, ParentType, ContextType, RequireFields<MutationStixCoreRelationshipsExportAskArgs, 'exportType' | 'format' | 'type'>>;
+  stixCoreRelationshipsExportPush?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationStixCoreRelationshipsExportPushArgs, 'file' | 'type'>>;
   stixCyberObservableAdd?: Resolver<Maybe<ResolversTypes['StixCyberObservable']>, ParentType, ContextType, RequireFields<MutationStixCyberObservableAddArgs, 'type'>>;
   stixCyberObservableEdit?: Resolver<Maybe<ResolversTypes['StixCyberObservableEditMutations']>, ParentType, ContextType, RequireFields<MutationStixCyberObservableEditArgs, 'id'>>;
   stixCyberObservableRelationshipAdd?: Resolver<Maybe<ResolversTypes['StixCyberObservableRelationship']>, ParentType, ContextType, Partial<MutationStixCyberObservableRelationshipAddArgs>>;
@@ -19524,6 +19576,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   stixCoreRelationship?: Resolver<Maybe<ResolversTypes['StixCoreRelationship']>, ParentType, ContextType, Partial<QueryStixCoreRelationshipArgs>>;
   stixCoreRelationships?: Resolver<Maybe<ResolversTypes['StixCoreRelationshipConnection']>, ParentType, ContextType, Partial<QueryStixCoreRelationshipsArgs>>;
   stixCoreRelationshipsDistribution?: Resolver<Maybe<Array<Maybe<ResolversTypes['Distribution']>>>, ParentType, ContextType, RequireFields<QueryStixCoreRelationshipsDistributionArgs, 'field' | 'operation'>>;
+  stixCoreRelationshipsExportFiles?: Resolver<Maybe<ResolversTypes['FileConnection']>, ParentType, ContextType, RequireFields<QueryStixCoreRelationshipsExportFilesArgs, 'type'>>;
   stixCoreRelationshipsNumber?: Resolver<Maybe<ResolversTypes['Number']>, ParentType, ContextType, Partial<QueryStixCoreRelationshipsNumberArgs>>;
   stixCoreRelationshipsTimeSeries?: Resolver<Maybe<Array<Maybe<ResolversTypes['TimeSeries']>>>, ParentType, ContextType, RequireFields<QueryStixCoreRelationshipsTimeSeriesArgs, 'endDate' | 'field' | 'interval' | 'operation' | 'startDate'>>;
   stixCyberObservable?: Resolver<Maybe<ResolversTypes['StixCyberObservable']>, ParentType, ContextType, RequireFields<QueryStixCyberObservableArgs, 'id'>>;
@@ -20278,6 +20331,7 @@ export type StixCyberObservableEditMutationsResolvers<ContextType = any, ParentT
 };
 
 export type StixCyberObservableRelationshipResolvers<ContextType = any, ParentType extends ResolversParentTypes['StixCyberObservableRelationship'] = ResolversParentTypes['StixCyberObservableRelationship']> = {
+  confidence?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   created_at?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   editContext?: Resolver<Maybe<Array<Maybe<ResolversTypes['EditUserContext']>>>, ParentType, ContextType>;
   entity_type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -20285,8 +20339,12 @@ export type StixCyberObservableRelationshipResolvers<ContextType = any, ParentTy
   fromRole?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   is_inferred?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  notes?: Resolver<Maybe<ResolversTypes['NoteConnection']>, ParentType, ContextType, Partial<StixCyberObservableRelationshipNotesArgs>>;
+  objectMarking?: Resolver<Maybe<ResolversTypes['MarkingDefinitionConnection']>, ParentType, ContextType>;
+  opinions?: Resolver<Maybe<ResolversTypes['OpinionConnection']>, ParentType, ContextType, Partial<StixCyberObservableRelationshipOpinionsArgs>>;
   parent_types?: Resolver<Array<Maybe<ResolversTypes['String']>>, ParentType, ContextType>;
   relationship_type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  reports?: Resolver<Maybe<ResolversTypes['ReportConnection']>, ParentType, ContextType, Partial<StixCyberObservableRelationshipReportsArgs>>;
   spec_version?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   standard_id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   start_time?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;

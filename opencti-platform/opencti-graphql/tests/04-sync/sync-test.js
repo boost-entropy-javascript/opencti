@@ -22,7 +22,7 @@ import { execPython3, executePython } from '../../src/python/pythonBridge';
 import { storeFullLoadById } from '../../src/database/middleware';
 import { checkInstanceDiff } from '../utils/testStream';
 import { shutdownModules, startModules } from '../../src/modules';
-import { FROM_START_STR } from '../../src/utils/format';
+import { FROM_START_STR, now } from '../../src/utils/format';
 import { SYSTEM_USER } from '../../src/utils/access';
 import { stixCoreObjectImportPush } from '../../src/domain/stixCoreObject';
 import { convertStoreToStix } from '../../src/database/stix-converter';
@@ -127,7 +127,7 @@ describe('Database sync testing', () => {
     expect(diffElements.length).toBe(0);
   };
 
-  it.skip(
+  it(
     'Should python raw sync succeed',
     async () => {
       // Pre check
@@ -145,7 +145,7 @@ describe('Database sync testing', () => {
     FIFTEEN_MINUTES
   );
 
-  it.skip(
+  it(
     'Should python live sync succeed',
     async () => {
       // Pre check
@@ -158,6 +158,7 @@ describe('Database sync testing', () => {
         API_TOKEN,
         SYNC_LIVE_EVENTS_SIZE,
         FROM_START_STR,
+        now(),
         'live',
       ];
       await startModules();
@@ -279,7 +280,7 @@ describe('Database sync testing', () => {
     );
   };
 
-  it.skip(
+  it(
     'Should backup/restore sync succeed',
     async () => {
       // Pre check
