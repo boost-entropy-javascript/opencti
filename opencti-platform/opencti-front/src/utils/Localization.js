@@ -135,6 +135,7 @@ const i18n = {
         'Souhaitez-vous supprimer ces entités ?',
       'Do you want to delete this live stream?':
         'Souhaitez-vous supprimer ce stream live ?',
+      'Do you want to delete this feed?': 'Souhaitez-vous supprimer ce flux ?',
       'Do you want to delete this synchronizer?':
         'Souhaitez-vous supprimer ce synchroniseur ?',
       'Do you want to start this synchronizer?':
@@ -398,6 +399,8 @@ const i18n = {
       'Let the field empty to grant all users':
         'Laissez le champ vide pour autoriser tous les utilisateurs',
       'Update a live stream': 'Modifier un stream live',
+      'Create a feed': 'Créer un flux',
+      'Update a feed': 'Modifier un flux',
       'Add external references': 'Ajouter des références externes',
       'Add notes': 'Ajouter des notes',
       'Add courses of action': 'Ajouter des conduites à suivre',
@@ -413,6 +416,8 @@ const i18n = {
       'Export the entity': "Exporter l'entité",
       'Cards view': 'Vue cartes',
       'Lines view': 'Vue lignes',
+      'Graph view': 'Vue graphe',
+      'Tactics matrix view': 'Vue matrice de tactiques',
       'Entities view': 'Vue entités',
       'Kill chain view': 'Vue kill chain',
       'Courses of action view': 'Vue conduites à suivre',
@@ -763,6 +768,12 @@ const i18n = {
       'Number of entities': "Nombre d'entités",
       'Number of relationships': 'Nombre de relations',
       'Live streams': 'Streams live',
+      'Feeds (CSV)': 'Flux (CSV)',
+      'Rolling time': 'Intervalle de requête',
+      'Rolling time (in seconds)': 'Intervalle de requête (en secondes)',
+      'Include headers in the feed': 'Inclure les en-têtes dans le flux',
+      Separator: 'Séparateur',
+      Columns: 'Colonnes',
       'Data sharing': 'Partage de données',
       'TAXII collections': 'Collections TAXII',
       Download: 'Télécharger',
@@ -1406,6 +1417,8 @@ const i18n = {
       disagree: 'désapprouve',
       neutral: 'neutre',
       agree: 'approuve',
+      'suggestion_threats-indicators':
+        'Create `indicates` relationships between indicators and the selected threat, then add all relations to the container.',
     },
     'zh-cn': {
       // Titles
@@ -1504,6 +1517,7 @@ const i18n = {
       'Do you want to delete this note?': '是否要删除此注释？',
       'Do you want to delete these entities?': '是否要删除这些实体？',
       'Do you want to delete this live stream?': '是否要删除此实时流？',
+      'Do you want to delete this feed?': '您要删除此提要吗？',
       'Do you want to delete this synchronizer?': '是否要删除此同步器？',
       'Do you want to start this synchronizer?': '是否要启动此同步器？',
       'Do you want to stop this synchronizer?': '是否要删除此同步器？',
@@ -1748,6 +1762,8 @@ const i18n = {
       'Let the field empty to grant all users':
         '将该字段设置为空，以授权给所有用户',
       'Update a live stream': '更新实时流',
+      'Create a feed': '创建提要',
+      'Update a feed': '更新提要',
       'Add external references': '添加外部引用',
       'Add notes': '添加注释',
       'Add courses of action': '添加应对措施',
@@ -1764,6 +1780,7 @@ const i18n = {
       'Cards view': '卡片视图',
       'Lines view': '线条视图',
       'Graph view': '图形视图',
+      'Tactics matrix view': '战术矩阵视图',
       'Entities view': '实体视图',
       'Kill chain view': '杀伤链视图',
       'Courses of action view': '应对措施视图',
@@ -2100,6 +2117,12 @@ const i18n = {
       'Number of entities': '实体数量',
       'Number of relationships': '关系数量',
       'Live streams': '实时流',
+      'Feeds (CSV)': '供稿 (CSV)',
+      'Rolling time': '查询间隔',
+      'Rolling time (in seconds)': '查询间隔（以秒为单位）',
+      'Include headers in the feed': '在提要中包含标题',
+      Separator: '分隔器',
+      Columns: '列',
       'Data sharing': '数据共享',
       'TAXII collections': 'TAXII集合',
       Download: '下载',
@@ -2735,6 +2758,8 @@ const i18n = {
       disagree: '不同意',
       neutral: '中性的',
       agree: '同意',
+      'suggestion_threats-indicators':
+        'Create `indicates` relationships between indicators and the selected threat, then add all relations to the container.',
     },
     'en-us': {
       progress: 'In progress',
@@ -2987,6 +3012,8 @@ const i18n = {
       SUBSCRIPTION_MANAGER: 'Subscriptions manager',
       RETENTION_MANAGER: 'Retention manager',
       HISTORY_MANAGER: 'History manager',
+      'suggestion_threats-indicators':
+        'Create `indicates` relationships between indicators and the selected threat, then add all relations to the container.',
     },
   },
 };
