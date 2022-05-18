@@ -167,8 +167,22 @@ const FeedCreation = (props) => {
     setOpen(false);
   };
 
-  const handleSelectTypes = (value) => {
-    setSelectedTypes(value);
+  const handleSelectTypes = (types) => {
+    setSelectedTypes(types);
+    // feed attributes must be eventually cleanup in case of types removal
+    const attrValues = R.values(feedAttributes);
+    // noinspection JSMismatchedCollectionQueryUpdate
+    const updatedFeedAttributes = [];
+    for (let index = 0; index < attrValues.length; index += 1) {
+      const feedAttr = attrValues[index];
+      const mappingEntries = Object.entries(feedAttr.mappings);
+      const keepMappings = mappingEntries.filter(([k]) => types.includes(k));
+      updatedFeedAttributes.push({
+        attribute: feedAttr.attribute,
+        mappings: R.fromPairs(keepMappings),
+      });
+    }
+    setFeedAttributes({ ...updatedFeedAttributes });
   };
 
   const onSubmit = (values, { setSubmitting, resetForm }) => {
@@ -176,8 +190,11 @@ const FeedCreation = (props) => {
       attribute: n.attribute,
       mappings: R.values(n.mappings),
     }));
-    const finalValues = R.assoc('feed_attributes', finalFeedAttributes, values);
-    // const jsonFilters = JSON.stringify(filters);
+    const finalValues = R.pipe(
+      R.assoc('rolling_time', parseInt(values.rolling_time, 10)),
+      R.assoc('feed_attributes', finalFeedAttributes),
+      R.assoc('filters', JSON.stringify(filters)),
+    )(values);
     commitMutation({
       mutation: feedCreationMutation,
       variables: {
@@ -388,7 +405,7 @@ const FeedCreation = (props) => {
                   variant="standard"
                   type="number"
                   name="rolling_time"
-                  label={t('Rolling time (in seconds)')}
+                  label={t('Rolling time (in minutes)')}
                   fullWidth={true}
                   style={{ marginTop: 20 }}
                 />
@@ -419,7 +436,6 @@ const FeedCreation = (props) => {
                   <Filters
                     variant="text"
                     availableFilterKeys={[
-                      'entity_type',
                       'markedBy',
                       'labelledBy',
                       'createdBy',
@@ -504,7 +520,7 @@ const FeedCreation = (props) => {
                             />
                           </Grid>
                           {selectedTypes.map((selectedType) => (
-                            <Grid item={true} xs="auto">
+                            <Grid key={selectedType} item={true} xs="auto">
                               <FormControl className={classes.formControl}>
                                 <InputLabel variant="standard">
                                   {t(`entity_${selectedType}`)}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import * as PropTypes from 'prop-types';
-import { Formik, Form, Field } from 'formik';
+import { Field, Form, Formik } from 'formik';
 import withStyles from '@mui/styles/withStyles';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -9,16 +9,16 @@ import { AddOutlined, CancelOutlined, Close } from '@mui/icons-material';
 import * as Yup from 'yup';
 import { createFragmentContainer, graphql } from 'react-relay';
 import * as R from 'ramda';
+import { filter, includes, map, pipe } from 'ramda';
 import MenuItem from '@mui/material/MenuItem';
 import Grid from '@mui/material/Grid';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MuiTextField from '@mui/material/TextField';
-import { filter, includes, map, pipe } from 'ramda';
 import Chip from '@mui/material/Chip';
 import inject18n from '../../../../components/i18n';
-import { QueryRenderer, commitMutation } from '../../../../relay/environment';
+import { commitMutation, QueryRenderer } from '../../../../relay/environment';
 import TextField from '../../../../components/TextField';
 import SelectField from '../../../../components/SelectField';
 import SwitchField from '../../../../components/SwitchField';
@@ -137,8 +137,22 @@ const FeedEditionContainer = (props) => {
     ...feed.feed_attributes.map((n) => R.assoc('mappings', R.indexBy(R.prop('type'), n.mappings), n)),
   });
 
-  const handleSelectTypes = (value) => {
-    setSelectedTypes(value);
+  const handleSelectTypes = (types) => {
+    setSelectedTypes(types);
+    // feed attributes must be eventually cleanup in case of types removal
+    const attrValues = R.values(feedAttributes);
+    // noinspection JSMismatchedCollectionQueryUpdate
+    const updatedFeedAttributes = [];
+    for (let index = 0; index < attrValues.length; index += 1) {
+      const feedAttr = attrValues[index];
+      const mappingEntries = Object.entries(feedAttr.mappings);
+      const keepMappings = mappingEntries.filter(([k]) => types.includes(k));
+      updatedFeedAttributes.push({
+        attribute: feedAttr.attribute,
+        mappings: R.fromPairs(keepMappings),
+      });
+    }
+    setFeedAttributes({ ...updatedFeedAttributes });
   };
 
   const onSubmit = (values, { setSubmitting, resetForm }) => {
@@ -146,8 +160,11 @@ const FeedEditionContainer = (props) => {
       attribute: n.attribute,
       mappings: R.values(n.mappings),
     }));
-    const finalValues = R.assoc('feed_attributes', finalFeedAttributes, values);
-    // const jsonFilters = JSON.stringify(filters);
+    const finalValues = R.pipe(
+      R.assoc('rolling_time', parseInt(values.rolling_time, 10)),
+      R.assoc('feed_attributes', finalFeedAttributes),
+      R.assoc('filters', JSON.stringify(filters)),
+    )(values);
     commitMutation({
       mutation: feedEditionMutation,
       variables: {
@@ -327,7 +344,7 @@ const FeedEditionContainer = (props) => {
                 variant="standard"
                 type="number"
                 name="rolling_time"
-                label={t('Rolling time (in seconds)')}
+                label={t('Rolling time (in minutes)')}
                 fullWidth={true}
                 style={{ marginTop: 20 }}
               />
@@ -358,7 +375,6 @@ const FeedEditionContainer = (props) => {
                 <Filters
                   variant="text"
                   availableFilterKeys={[
-                    'entity_type',
                     'markedBy',
                     'labelledBy',
                     'createdBy',
@@ -443,7 +459,7 @@ const FeedEditionContainer = (props) => {
                           />
                         </Grid>
                         {selectedTypes.map((selectedType) => (
-                          <Grid item={true} xs="auto">
+                          <Grid key={selectedType} item={true} xs="auto">
                             <FormControl className={classes.formControl}>
                               <InputLabel variant="standard">
                                 {t(`entity_${selectedType}`)}
@@ -557,6 +573,7 @@ const FeedEditionFragment = createFragmentContainer(FeedEditionContainer, {
     fragment FeedEdition_feed on Feed {
       id
       name
+      filters
       rolling_time
       include_header
       feed_types
