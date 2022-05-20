@@ -36,6 +36,7 @@ const styles = (theme) => ({
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
+    paddingRight: 5,
   },
   goIcon: {
     position: 'absolute',
@@ -69,7 +70,13 @@ class FeedLineLineComponent extends Component {
     const { t, classes, node, dataColumns, paginationOptions } = this.props;
     const filters = JSON.parse(node.filters || '{}');
     return (
-      <ListItem classes={{ root: classes.item }} divider={true}>
+      <ListItem
+        classes={{ root: classes.item }}
+        divider={true}
+        button={true}
+        component="a"
+        href={`/feeds/${node.id}`}
+      >
         <ListItemIcon classes={{ root: classes.itemIcon }}>
           <FileDelimitedOutline />
         </ListItemIcon>

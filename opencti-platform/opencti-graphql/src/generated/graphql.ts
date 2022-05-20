@@ -9614,7 +9614,7 @@ export type QueryStixCoreRelationshipArgs = {
 export type QueryStixCoreRelationshipsArgs = {
   after?: InputMaybe<Scalars['ID']>;
   confidences?: InputMaybe<Array<InputMaybe<Scalars['Int']>>>;
-  elementId?: InputMaybe<Scalars['String']>;
+  elementId?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   elementWithTargetTypes?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   endDate?: InputMaybe<Scalars['DateTime']>;
   filterMode?: InputMaybe<FilterMode>;
@@ -9622,7 +9622,7 @@ export type QueryStixCoreRelationshipsArgs = {
   first?: InputMaybe<Scalars['Int']>;
   firstSeenStart?: InputMaybe<Scalars['DateTime']>;
   firstSeenStop?: InputMaybe<Scalars['DateTime']>;
-  fromId?: InputMaybe<Scalars['String']>;
+  fromId?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   fromRole?: InputMaybe<Scalars['String']>;
   fromTypes?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   lastSeenStart?: InputMaybe<Scalars['DateTime']>;
@@ -9637,7 +9637,7 @@ export type QueryStixCoreRelationshipsArgs = {
   stix?: InputMaybe<Scalars['Boolean']>;
   stopTimeStart?: InputMaybe<Scalars['DateTime']>;
   stopTimeStop?: InputMaybe<Scalars['DateTime']>;
-  toId?: InputMaybe<Scalars['String']>;
+  toId?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   toRole?: InputMaybe<Scalars['String']>;
   toTypes?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
 };
@@ -11117,6 +11117,7 @@ export type Settings = BasicObject & InternalObject & {
   platform_enable_reference?: Maybe<Array<Maybe<Scalars['String']>>>;
   platform_favicon?: Maybe<Scalars['String']>;
   platform_feature_flags?: Maybe<Array<Maybe<Module>>>;
+  platform_hidden_types?: Maybe<Array<Maybe<Scalars['String']>>>;
   platform_language?: Maybe<Scalars['String']>;
   platform_login_message?: Maybe<Scalars['String']>;
   platform_map_tile_server_dark?: Maybe<Scalars['String']>;
@@ -11782,6 +11783,7 @@ export type StixCoreRelationshipsFiltering = {
 export enum StixCoreRelationshipsOrdering {
   Confidence = 'confidence',
   Created = 'created',
+  CreatedBy = 'createdBy',
   CreatedAt = 'created_at',
   EntityType = 'entity_type',
   KillChainPhase = 'killChainPhase',
@@ -13440,7 +13442,7 @@ export enum TaskActionType {
   Merge = 'MERGE',
   Remove = 'REMOVE',
   Replace = 'REPLACE',
-  Rescan = 'RESCAN'
+  RuleElementRescan = 'RULE_ELEMENT_RESCAN'
 }
 
 export type TaskConnection = {
@@ -20186,6 +20188,7 @@ export type SettingsResolvers<ContextType = any, ParentType extends ResolversPar
   platform_enable_reference?: Resolver<Maybe<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
   platform_favicon?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   platform_feature_flags?: Resolver<Maybe<Array<Maybe<ResolversTypes['Module']>>>, ParentType, ContextType>;
+  platform_hidden_types?: Resolver<Maybe<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
   platform_language?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   platform_login_message?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   platform_map_tile_server_dark?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
