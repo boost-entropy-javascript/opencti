@@ -32,7 +32,7 @@ steps:
       - yarn lint
       - pip3 install --upgrade --force --no-cache-dir git+https://github.com/OpenCTI-Platform/client-python@master
       - sleep 160
-      - yarn test
+      - NODE_OPTIONS=--max_old_space_size=8192 yarn test
 
   - name: api-coverage
     image: plugins/codecov
@@ -42,13 +42,13 @@ steps:
         - opencti-platform/opencti-graphql/coverage
 
   - name: frontend-tests
-    image: nikolaik/python-nodejs:python3.9-nodejs16-alpine
+    image: nikolaik/python-nodejs:python3.10-nodejs16-alpine
     commands:
       - cd opencti-platform/opencti-front
       - yarn install
       - yarn build
       - yarn lint
-      - yarn test
+      - NODE_OPTIONS=--max_old_space_size=8192 yarn test
 
   - name: build-circleci
     image: curlimages/curl
@@ -99,13 +99,13 @@ services:
       discovery.type: single-node
       ES_JAVA_OPTS: -Xms2g -Xmx2g
   - name: minio
-    image: minio/minio:RELEASE.2022-02-26T02-54-46Z
+    image: minio/minio:RELEASE.2022-05-19T18-20-59Z
     environment:
       MINIO_ROOT_USER: ChangeMe
       MINIO_ROOT_PASSWORD: ChangeMe
     command: [server, /data]
   - name: rabbitmq
-    image: rabbitmq:3.9-management
+    image: rabbitmq:3.10-management
   - name: opencti-raw-start
     image: nikolaik/python-nodejs:python3.10-nodejs16-alpine
     environment:
@@ -129,7 +129,7 @@ services:
       - yarn install
       - yarn install:python
       - pip3 install --upgrade --force --no-cache-dir git+https://github.com/OpenCTI-Platform/client-python@master
-      - yarn start
+      - NODE_OPTIONS=--max_old_space_size=8192 yarn start
   - name: opencti-live-start
     image: nikolaik/python-nodejs:python3.10-nodejs16-alpine
     environment:
@@ -153,7 +153,7 @@ services:
       - yarn install
       - yarn install:python
       - pip3 install --upgrade --force --no-cache-dir git+https://github.com/OpenCTI-Platform/client-python@master
-      - yarn start
+      - NODE_OPTIONS=--max_old_space_size=8192 yarn start
   - name: opencti-direct-start
     image: nikolaik/python-nodejs:python3.10-nodejs16-alpine
     environment:
@@ -177,7 +177,7 @@ services:
       - yarn install
       - yarn install:python
       - pip3 install --upgrade --force --no-cache-dir git+https://github.com/OpenCTI-Platform/client-python@master
-      - yarn start
+      - NODE_OPTIONS=--max_old_space_size=8192 yarn start
   - name: opencti-restore-start
     image: nikolaik/python-nodejs:python3.10-nodejs16-alpine
     environment:
@@ -201,4 +201,4 @@ services:
       - yarn install
       - yarn install:python
       - pip3 install --upgrade --force --no-cache-dir git+https://github.com/OpenCTI-Platform/client-python@master
-      - yarn start
+      - NODE_OPTIONS=--max_old_space_size=8192 yarn start

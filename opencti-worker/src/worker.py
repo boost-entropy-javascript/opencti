@@ -66,6 +66,8 @@ class Consumer(Thread):  # pylint: disable=too-many-instance-attributes
         self.channel = self.pika_connection.channel()
         self.channel.basic_qos(prefetch_count=1)
         self.processing_count: int = 0
+        self.current_bundle_id: [str, None] = None
+        self.current_bundle_seq: int = 0
 
     @property
     def id(self) -> Any:  # pylint: disable=inconsistent-return-statements
