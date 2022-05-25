@@ -147,10 +147,11 @@ const createApp = async (app) => {
       const { file } = req.params;
       const data = await loadFile(auth, file);
       res.setHeader('Content-disposition', contentDisposition(data.name, { type: 'inline' }));
-      res.set({ 'Content-Security-Policy': 'sandbox' });
-      res.set({ 'Cache-Control': 'no-cache' });
+      res.setHeader({ 'Content-Security-Policy': 'sandbox' });
+      res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+      res.setHeader({ Pragma: 'no-cache' });
       if (data.metaData.mimetype === 'text/html') {
-        res.set({ 'Content-type': 'text/html; charset=utf-8' });
+        res.setHeader({ 'Content-type': 'text/html; charset=utf-8' });
       } else {
         res.setHeader('Content-type', data.metaData.mimetype);
       }
@@ -176,8 +177,8 @@ const createApp = async (app) => {
         const markDownData = await getFileContent(file);
         const converter = new showdown.Converter();
         const html = converter.makeHtml(markDownData);
-        res.set({ 'Content-Security-Policy': 'sandbox' });
-        res.set({ 'Cache-Control': 'no-cache' });
+        res.setHeader({ 'Content-Security-Policy': 'sandbox' });
+        res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
         res.send(html);
       } else {
         res.send('Unsupported file type');
@@ -263,9 +264,9 @@ const createApp = async (app) => {
   app.get('*', (req, res) => {
     const data = readFileSync(`${__dirname}/../public/index.html`, 'utf8');
     const withOptionValued = data.replace(/%BASE_PATH%/g, basePath);
-    res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-    res.header('Expires', '-1');
-    res.header('Pragma', 'no-cache');
+    res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    res.setHeader('Expires', '-1');
+    res.setHeader('Pragma', 'no-cache');
     return res.send(withOptionValued);
   });
 
