@@ -503,6 +503,7 @@ class StixDomainObjectCreation extends Component {
                         <MenuItem value="yara">YARA</MenuItem>
                         <MenuItem value="tanium-signal">Tanium Signal</MenuItem>
                         <MenuItem value="spl">Splunk SPL</MenuItem>
+                        <MenuItem value="eql">Elastic EQL</MenuItem>
                       </Field>
                       <Field
                         component={TextField}
@@ -696,6 +697,7 @@ class StixDomainObjectCreation extends Component {
                         <MenuItem value="yara">YARA</MenuItem>
                         <MenuItem value="tanium-signal">Tanium Signal</MenuItem>
                         <MenuItem value="spl">Splunk SPL</MenuItem>
+                        <MenuItem value="eql">Elastic EQL</MenuItem>
                       </Field>
                       <Field
                         component={TextField}
