@@ -32,8 +32,7 @@ steps:
       - yarn lint
       - pip3 install --upgrade --force --no-cache-dir git+https://github.com/OpenCTI-Platform/client-python@master
       - sleep 60
-      - export NODE_OPTIONS=--max_old_space_size=12288
-      - yarn test
+      - NODE_OPTIONS=--max_old_space_size=8192 yarn test
 
   - name: api-coverage
     image: plugins/codecov
@@ -49,8 +48,7 @@ steps:
       - yarn install
       - yarn build
       - yarn lint
-      - export NODE_OPTIONS=--max_old_space_size=12288
-      - yarn test
+      - NODE_OPTIONS=--max_old_space_size=8192 yarn test
 
   - name: build-circleci
     image: curlimages/curl
@@ -131,7 +129,7 @@ services:
       - yarn install
       - yarn install:python
       - pip3 install --upgrade --force --no-cache-dir git+https://github.com/OpenCTI-Platform/client-python@master
-      - NODE_OPTIONS=--max_old_space_size=12288 yarn start
+      - NODE_OPTIONS=--max_old_space_size=8192 yarn start
   - name: opencti-live-start
     image: nikolaik/python-nodejs:python3.10-nodejs16-alpine
     environment:
