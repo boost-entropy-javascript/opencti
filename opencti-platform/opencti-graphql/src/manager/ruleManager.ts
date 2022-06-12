@@ -37,7 +37,6 @@ const MIN_LIVE_STREAM_EVENT_VERSION = 4;
 // let activatedRules: Array<RuleRuntime> = [];
 const RULE_ENGINE_ID = 'rule_engine_settings';
 const RULE_ENGINE_KEY = conf.get('rule_engine:lock_key');
-const STATUS_WRITE_RANGE = conf.get('rule_engine:status_writing_delay') || 500;
 const SCHEDULE_TIME = 10000;
 
 // region rules registration
@@ -80,10 +79,13 @@ const ruleMergeHandler = async (event: MergeEvent): Promise<Array<Event>> => {
     for (let index = 0; index < shifts.length; index += 1) {
       const shift = shifts[index];
       const shiftedElement = await stixLoadById(RULE_MANAGER_USER, shift) as StixCoreObject;
-      // We need to cleanup the element associated with this relation and then rescan it
-      events.push(buildInternalEvent(EVENT_TYPE_DELETE, shiftedElement));
-      // Then we need to generate event for redo rule on shifted relations
-      events.push(buildInternalEvent(EVENT_TYPE_CREATE, shiftedElement));
+      // In past reprocess the shift element can already have been deleted.
+      if (shiftedElement) {
+        // We need to cleanup the element associated with this relation and then rescan it
+        events.push(buildInternalEvent(EVENT_TYPE_DELETE, shiftedElement));
+        // Then we need to generate event for redo rule on shifted relations
+        events.push(buildInternalEvent(EVENT_TYPE_CREATE, shiftedElement));
+      }
     }
   }
   // endregion
@@ -182,11 +184,9 @@ export const rulesApplyHandler = async (events: Array<Event>, forRules: Array<Ru
     return;
   }
   const rules = forRules.length > 0 ? forRules : await getActivatedRules();
-  // Keep only compatible events
-  const compatibleEvents = events.filter((e) => e.version === EVENT_CURRENT_VERSION);
   // Execute the events
-  for (let index = 0; index < compatibleEvents.length; index += 1) {
-    const event = compatibleEvents[index];
+  for (let index = 0; index < events.length; index += 1) {
+    const event = events[index];
     const { type, data } = event;
     const internalId = data.extensions[STIX_EXT_OCTI].id;
     try {
@@ -252,7 +252,7 @@ export const rulesCleanHandler = async (instances: Array<BasicStoreCommon>, rule
       const isElementCleanable = isNotEmptyField(instance[`${RULE_PREFIX}${rule.id}`]);
       if (isElementCleanable) {
         const processingElement: StixCoreObject = await storeLoadByIdWithRefs(RULE_MANAGER_USER, instance.internal_id);
-        // In case of inference of inference, element can be recursively cleanup by the deletion system
+        // In case of "inference of inference", element can be recursively cleanup by the deletion system
         if (processingElement) {
           const derivedEvents = await rule.clean(processingElement, deletedDependencies);
           await rulesApplyHandler(derivedEvents);
@@ -262,8 +262,7 @@ export const rulesCleanHandler = async (instances: Array<BasicStoreCommon>, rule
   }
 };
 
-let streamEventProcessedCount = 0;
-const ruleStreamHandler = async (streamEvents: Array<StreamEvent>) => {
+const ruleStreamHandler = async (streamEvents: Array<StreamEvent>, lastEventId: string) => {
   // Create list of events to process
   // Events must be in a compatible version and not inferences events
   // Inferences directly handle recursively by the manager
@@ -279,16 +278,10 @@ const ruleStreamHandler = async (streamEvents: Array<StreamEvent>) => {
     const ruleEvents: Array<Event> = compatibleEvents.map((e) => e.data);
     // Execute the events
     await rulesApplyHandler(ruleEvents);
-    // Save the last processed event
-    if (streamEventProcessedCount > STATUS_WRITE_RANGE) {
-      const lastEvent = R.last(compatibleEvents);
-      const patch = { lastEventId: lastEvent?.id };
-      await patchAttribute(RULE_MANAGER_USER, RULE_ENGINE_ID, ENTITY_TYPE_RULE_MANAGER, patch);
-      streamEventProcessedCount = 0;
-    } else {
-      streamEventProcessedCount += compatibleEvents.length;
-    }
   }
+  // Save the last processed event
+  logApp.debug(`[OPENCTI] Rule manager saving state to ${lastEventId}`);
+  await patchAttribute(RULE_MANAGER_USER, RULE_ENGINE_ID, ENTITY_TYPE_RULE_MANAGER, { lastEventId });
 };
 
 const getInitRuleManager = async (): Promise<BasicStoreEntity> => {
@@ -312,7 +305,7 @@ const initRuleManager = () => {
     try {
       // Lock the manager
       lock = await lockResource([RULE_ENGINE_KEY]);
-      logApp.info('[OPENCTI-MODULE] Running rule manager');
+      logApp.info(`[OPENCTI-MODULE] Running rule manager from ${lastEventId}`);
       // Start the stream listening
       streamProcessor = createStreamProcessor(RULE_MANAGER_USER, 'Rule manager', ruleStreamHandler);
       await streamProcessor.start(lastEventId);
@@ -326,8 +319,8 @@ const initRuleManager = () => {
         logApp.error('[OPENCTI-MODULE] Rule engine failed to start', { error: e });
       }
     } finally {
-      if (lock) await lock.unlock();
       if (streamProcessor) await streamProcessor.shutdown();
+      if (lock) await lock.unlock();
     }
   };
   return {
