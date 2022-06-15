@@ -306,16 +306,26 @@ class StixDomainObjectHeader extends Component {
           <div className={classes.aliases}>
             {R.take(5, aliases).map(
               (label) => label.length > 0 && (
-                  <Chip
+                  <Security
+                    needs={[KNOWLEDGE_KNUPDATE]}
                     key={label}
-                    classes={{ root: classes.alias }}
-                    label={label}
-                    onDelete={
-                      enableReferences
-                        ? this.handleOpenCommitDelete.bind(this, label)
-                        : this.deleteAlias.bind(this, label)
+                    placeholder={
+                      <Chip
+                        classes={{ root: classes.alias }}
+                        label={label}
+                      />
                     }
-                  />
+                  >
+                    <Chip
+                      classes={{ root: classes.alias }}
+                      label={label}
+                      onDelete={
+                        enableReferences
+                          ? this.handleOpenCommitDelete.bind(this, label)
+                          : this.deleteAlias.bind(this, label)
+                      }
+                    />
+                  </Security>
               ),
             )}
             <Security needs={[KNOWLEDGE_KNUPDATE]}>
