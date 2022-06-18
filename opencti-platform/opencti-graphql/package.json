@@ -1,6 +1,6 @@
 {
   "name": "opencti-graphql",
-  "version": "5.3.6",
+  "version": "5.3.7",
   "main": "src/index.js",
   "license": "Apache-2.0",
   "scripts": {
@@ -27,6 +27,7 @@
     "node": ">= 16.*"
   },
   "dependencies": {
+    "@aws-sdk/credential-providers": "3.110.0",
     "@elastic/elasticsearch": "7.17.0",
     "@graphql-tools/schema": "8.3.14",
     "@graphql-tools/utils": "8.6.13",
