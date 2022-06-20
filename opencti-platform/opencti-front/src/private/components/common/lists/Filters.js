@@ -3,7 +3,7 @@ import * as R from 'ramda';
 import withStyles from '@mui/styles/withStyles';
 import withTheme from '@mui/styles/withTheme';
 import Grid from '@mui/material/Grid';
-import DatePicker from '@mui/lab/DatePicker';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import Popover from '@mui/material/Popover';
@@ -915,6 +915,12 @@ class Filters extends Component {
             'related-to',
             'communicates-with',
             'attributed-to',
+            'based-on',
+            'mitigates',
+            'variant-of',
+            'compromises',
+            'delivers',
+            'belongs-to',
           ],
         );
         if (this.props.allRelationshipTypes) {
