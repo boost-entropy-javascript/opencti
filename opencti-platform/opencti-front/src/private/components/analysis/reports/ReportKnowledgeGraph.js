@@ -429,7 +429,7 @@ class ReportKnowledgeGraphComponent extends Component {
       mode3D: R.propOr(false, 'mode3D', params),
       modeFixed: R.propOr(false, 'modeFixed', params),
       modeTree: R.propOr('', 'modeTree', params),
-      initialTimeRangeInterval: timeRangeInterval,
+      displayTimeRange: R.propOr(false, 'displayTimeRange', params),
       selectedTimeRangeInterval: timeRangeInterval,
       allStixCoreObjectsTypes,
       allMarkedBy,
@@ -780,7 +780,7 @@ class ReportKnowledgeGraphComponent extends Component {
           this.state.stixCoreObjectsTypes,
           this.state.markedBy,
           this.state.createdBy,
-          [],
+          ignoredStixCoreObjectsTypes,
           selectedTimeRangeInterval,
         ),
       },
@@ -1115,7 +1115,6 @@ class ReportKnowledgeGraphComponent extends Component {
       numberOfSelectedNodes,
       numberOfSelectedLinks,
       displayTimeRange,
-      initialTimeRangeInterval,
       selectedTimeRangeInterval,
       width,
       height,
@@ -1123,8 +1122,9 @@ class ReportKnowledgeGraphComponent extends Component {
     const graphWidth = width || window.innerWidth - 210;
     const graphHeight = height || window.innerHeight - 180;
     const displayLabels = graphData.links.length < 200;
+    const timeRangeInterval = computeTimeRangeInterval(this.graphObjects);
     const timeRangeValues = computeTimeRangeValues(
-      initialTimeRangeInterval,
+      timeRangeInterval,
       this.graphObjects,
     );
     return (
@@ -1179,7 +1179,7 @@ class ReportKnowledgeGraphComponent extends Component {
           handleToggleDisplayTimeRange={this.handleToggleDisplayTimeRange.bind(
             this,
           )}
-          timeRangeInterval={initialTimeRangeInterval}
+          timeRangeInterval={timeRangeInterval}
           selectedTimeRangeInterval={selectedTimeRangeInterval}
           handleTimeRangeChange={this.handleTimeRangeChange.bind(this)}
           timeRangeValues={timeRangeValues}
