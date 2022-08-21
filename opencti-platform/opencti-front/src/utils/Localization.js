@@ -27,7 +27,7 @@ const i18n = {
       'Other STIX IDs': 'Autres IDs STIX',
       // Interface
       Login: "Nom d'utilisateur",
-      'Two-factor Verification': 'Vérification à deux facteurs',
+      'Two-factor authentication': 'Authentification double facteur',
       'Use 2FA authentication': "Utiliser l'authentification à deux facteurs",
       Search: 'Rechercher',
       Active: 'Actif',
@@ -175,6 +175,8 @@ const i18n = {
       Enable: 'Activer',
       Disable: 'Désactiver',
       Rescan: 'Rescanner',
+      'You have no subscription for the moment.':
+        "Vous n'avez aucune souscription pour le moment.",
       'Last notes': 'Dernières notes',
       'Latest reports written by this entity':
         'Derniers rapports écrits par cette entité',
@@ -582,7 +584,14 @@ const i18n = {
       'Reports distribution': 'Répartition des rapports',
       'Targeting types': 'Types de ciblages',
       'Used TTPs': 'TTPs utilisées',
+      'The code is not correct': 'Le code est incorrect',
+      'Type the code generated in your application':
+        'Taper le code généré dans votre application',
       Evolution: 'Evolution',
+      'Enable two-factor authentication':
+        "Activer l'authentification double facteur",
+      'Disable two-factor authentication':
+        "Désactiver l'authentification double facteur",
       'Targeting through time': 'Ciblage à travers le temps',
       'TTPs through time': 'TTPs à travers le temps',
       Graph: 'Graph',
@@ -1064,6 +1073,8 @@ const i18n = {
       Table: 'Tableau',
       'Line chart': 'Graphique linéaire',
       Timeline: 'Chronologie',
+      Renew: 'Renouveler',
+      Authentication: 'Authentification',
       'Total pending inserts': "Nombre d'insertions en attente",
       'Relations to threats': 'Relations vers des menaces',
       'Relations to other entities': "Relations vers d'autres entités",
@@ -1081,8 +1092,8 @@ const i18n = {
       'Total indicators': "Nombre d'indicateurs",
       'Total direct relations': 'Nombre de relations directes',
       'Top Labels (3 last months)': 'Top Labels (3 derniers mois)',
-      'Last ingested analysis (creation date in the platform)':
-        'Dernières analyses ajoutées (date de création dans la plateforme)',
+      'Last ingested reports (creation date in the platform)':
+        'Derniers rapports ajoutés (date de création dans la plateforme)',
       'Distribution of entities': 'Distribution des entités',
       'Entities distribution': 'Distribution des entités',
       'Distribution of opinions': 'Distribution des opinions',
@@ -1472,7 +1483,7 @@ const i18n = {
       'Other STIX IDs': '其它STIX IDs',
       // Interface
       Login: '登录',
-      'Two-factor Verification': '兩因素驗證',
+      'Two-factor authentication': '两因素身份验证',
       'Use 2FA authentication': '使用 2FA 身份驗證',
       Search: '搜索',
       Active: '活跃',
@@ -2294,6 +2305,8 @@ const i18n = {
         '在此OpenCTI应用程序上找不到此页面。',
       'Phase name': '阶段名称',
       'Kill chain name': '杀伤链名称',
+      'You have no subscription for the moment.': '您暂时没有订阅。',
+      Renew: '更新',
       Order: '次序',
       Options: '选项',
       Author: '作者',
@@ -2375,10 +2388,13 @@ const i18n = {
       'Main observable type': '主要可观测类型',
       'Played role': '扮演的角色',
       'Observables roles': '可观测角色',
+      'Enable two-factor authentication': '启用双重身份验证',
+      'Disable two-factor authentication': '禁用双重身份验证',
       Proxy: '代理',
       Sender: '发件人',
       Implant: '植入',
       Domain: '域',
+      Authentication: '验证',
       'IPv4 address': 'IPv4地址',
       'IPv6 address': 'IPv6地址',
       'MAC address': 'MAC地址',
@@ -2449,8 +2465,8 @@ const i18n = {
       'Total indicators': '攻击指标总数',
       'Total direct relations': '直接关系总数',
       'Top Labels (3 last months)': '最多标签(最近3个月)',
-      'Last ingested analysis (creation date in the platform)':
-        '上次引入的分析(在平台中的创建日期)',
+      'Last ingested reports (creation date in the platform)':
+        '上次摄取的报告（平台中的创建日期）',
       'Distribution of entities': '实体分布',
       'Entities distribution': '实体分布',
       'Distribution of opinions': '意见分布',
