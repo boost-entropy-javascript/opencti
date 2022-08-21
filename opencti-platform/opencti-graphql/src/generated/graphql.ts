@@ -4748,14 +4748,18 @@ export type IndividualEditMutationsRelationDeleteArgs = {
 
 export enum IndividualsFilter {
   Aliases = 'aliases',
+  ContactInformation = 'contact_information',
   Created = 'created',
   CreatedBy = 'createdBy',
   CreatedAt = 'created_at',
+  Description = 'description',
   LabelledBy = 'labelledBy',
   MarkedBy = 'markedBy',
   Modified = 'modified',
   Name = 'name',
   UpdatedAt = 'updated_at',
+  XOpenctiFirstname = 'x_opencti_firstname',
+  XOpenctiLastname = 'x_opencti_lastname',
   XOpenctiWorkflowId = 'x_opencti_workflow_id'
 }
 
@@ -8390,9 +8394,11 @@ export enum OrganizationReliability {
 
 export enum OrganizationsFilter {
   Aliases = 'aliases',
+  ContactInformation = 'contact_information',
   Created = 'created',
   CreatedBy = 'createdBy',
   CreatedAt = 'created_at',
+  Description = 'description',
   LabelledBy = 'labelledBy',
   MarkedBy = 'markedBy',
   Modified = 'modified',
@@ -8846,6 +8852,7 @@ export type Query = {
   connectors?: Maybe<Array<Maybe<Connector>>>;
   connectorsForExport?: Maybe<Array<Maybe<Connector>>>;
   connectorsForImport?: Maybe<Array<Maybe<Connector>>>;
+  connectorsForWorker?: Maybe<Array<Maybe<Connector>>>;
   container?: Maybe<Container>;
   containers?: Maybe<ContainerConnection>;
   containersObjectsOfObject?: Maybe<StixObjectOrStixRelationshipConnection>;
@@ -19910,6 +19917,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   connectors?: Resolver<Maybe<Array<Maybe<ResolversTypes['Connector']>>>, ParentType, ContextType>;
   connectorsForExport?: Resolver<Maybe<Array<Maybe<ResolversTypes['Connector']>>>, ParentType, ContextType>;
   connectorsForImport?: Resolver<Maybe<Array<Maybe<ResolversTypes['Connector']>>>, ParentType, ContextType>;
+  connectorsForWorker?: Resolver<Maybe<Array<Maybe<ResolversTypes['Connector']>>>, ParentType, ContextType>;
   container?: Resolver<Maybe<ResolversTypes['Container']>, ParentType, ContextType, Partial<QueryContainerArgs>>;
   containers?: Resolver<Maybe<ResolversTypes['ContainerConnection']>, ParentType, ContextType, Partial<QueryContainersArgs>>;
   containersObjectsOfObject?: Resolver<Maybe<ResolversTypes['StixObjectOrStixRelationshipConnection']>, ParentType, ContextType, RequireFields<QueryContainersObjectsOfObjectArgs, 'id'>>;

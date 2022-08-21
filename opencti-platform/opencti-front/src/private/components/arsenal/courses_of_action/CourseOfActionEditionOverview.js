@@ -22,7 +22,11 @@ import { commitMutation } from '../../../../relay/environment';
 import CreatedByField from '../../common/form/CreatedByField';
 import ObjectMarkingField from '../../common/form/ObjectMarkingField';
 import MarkDownField from '../../../../components/MarkDownField';
-import { convertCreatedBy, convertMarkings, convertStatus } from '../../../../utils/Edition';
+import {
+  convertCreatedBy,
+  convertMarkings,
+  convertStatus,
+} from '../../../../utils/Edition';
 import StatusField from '../../common/form/StatusField';
 
 const styles = (theme) => ({
@@ -116,6 +120,7 @@ const courseOfActionValidation = (t) => Yup.object().shape({
   x_opencti_log_sources: Yup.string().nullable(),
   references: Yup.array().required(t('This field is required')),
   x_opencti_workflow_id: Yup.object(),
+  x_mitre_id: Yup.string().nullable(),
 });
 
 class CourseOfActionEditionOverviewComponent extends Component {
@@ -215,12 +220,14 @@ class CourseOfActionEditionOverviewComponent extends Component {
       pick([
         'name',
         'description',
+        'x_mitre_id',
         'x_opencti_threat_hunting',
         'x_opencti_log_sources',
         'createdBy',
         'killChainPhases',
         'objectMarking',
         'x_opencti_workflow_id',
+        'x_mitre_id',
       ]),
     )(courseOfAction);
     return (
@@ -242,6 +249,19 @@ class CourseOfActionEditionOverviewComponent extends Component {
               onSubmit={this.handleSubmitField.bind(this)}
               helperText={
                 <SubscriptionFocus context={context} fieldName="name" />
+              }
+            />
+            <Field
+              component={TextField}
+              variant="standard"
+              name="x_mitre_id"
+              label={t('External ID')}
+              fullWidth={true}
+              style={{ marginTop: 20 }}
+              onFocus={this.handleChangeFocus.bind(this)}
+              onSubmit={this.handleSubmitField.bind(this)}
+              helperText={
+                <SubscriptionFocus context={context} fieldName="x_mitre_id" />
               }
             />
             <Field
@@ -294,20 +314,20 @@ class CourseOfActionEditionOverviewComponent extends Component {
               }
             />
             {courseOfAction.workflowEnabled && (
-                <StatusField
-                    name="x_opencti_workflow_id"
-                    type="Course-Of-Action"
-                    onFocus={this.handleChangeFocus.bind(this)}
-                    onChange={this.handleSubmitField.bind(this)}
-                    setFieldValue={setFieldValue}
-                    style={{ marginTop: 20 }}
-                    helpertext={
-                      <SubscriptionFocus
-                          context={context}
-                          fieldName="x_opencti_workflow_id"
-                      />
-                    }
-                />
+              <StatusField
+                name="x_opencti_workflow_id"
+                type="Course-Of-Action"
+                onFocus={this.handleChangeFocus.bind(this)}
+                onChange={this.handleSubmitField.bind(this)}
+                setFieldValue={setFieldValue}
+                style={{ marginTop: 20 }}
+                helpertext={
+                  <SubscriptionFocus
+                    context={context}
+                    fieldName="x_opencti_workflow_id"
+                  />
+                }
+              />
             )}
             <CreatedByField
               name="createdBy"
@@ -354,6 +374,7 @@ const CourseOfActionEditionOverview = createFragmentContainer(
         description
         x_opencti_threat_hunting
         x_opencti_log_sources
+        x_mitre_id
         createdBy {
           ... on Identity {
             id
