@@ -3200,7 +3200,9 @@ export type Group = BasicObject & InternalObject & {
 };
 
 export type GroupAddInput = {
+  auto_new_marking?: InputMaybe<Scalars['Boolean']>;
   clientMutationId?: InputMaybe<Scalars['String']>;
+  default_assignation?: InputMaybe<Scalars['Boolean']>;
   description?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
 };
@@ -13456,6 +13458,7 @@ export type SynchronizerAddInput = {
   listen_deletion: Scalars['Boolean'];
   name: Scalars['String'];
   no_dependencies: Scalars['Boolean'];
+  recover?: InputMaybe<Scalars['DateTime']>;
   ssl_verify?: InputMaybe<Scalars['Boolean']>;
   stream_id: Scalars['String'];
   token: Scalars['String'];
