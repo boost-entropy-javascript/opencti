@@ -22,6 +22,7 @@ import {
 } from '../../../../utils/Edition';
 import { buildDate } from '../../../../utils/Time';
 import DateTimePickerField from '../../../../components/DateTimePickerField';
+import OpenVocabField from '../../common/form/OpenVocabField';
 
 const styles = (theme) => ({
   drawerPaper: {
@@ -55,8 +56,8 @@ const eventMutationFieldPatch = graphql`
     $commitMessage: String
     $references: [String]
   ) {
-    eventEdit(id: $id) {
-      fieldPatch(
+      eventFieldPatch(
+        id: $id
         input: $input
         commitMessage: $commitMessage
         references: $references
@@ -65,15 +66,12 @@ const eventMutationFieldPatch = graphql`
         ...Event_event
       }
     }
-  }
 `;
 
 export const eventEditionOverviewFocus = graphql`
   mutation EventEditionOverviewFocusMutation($id: ID!, $input: EditContext!) {
-    eventEdit(id: $id) {
-      contextPatch(input: $input) {
-        id
-      }
+    eventContextPatch(id: $id, input: $input) {
+      id
     }
   }
 `;
@@ -83,11 +81,9 @@ const eventMutationRelationAdd = graphql`
     $id: ID!
     $input: StixMetaRelationshipAddInput!
   ) {
-    eventEdit(id: $id) {
-      relationAdd(input: $input) {
-        from {
-          ...EventEditionOverview_event
-        }
+    eventRelationAdd(id: $id, input: $input) {
+      from {
+        ...EventEditionOverview_event
       }
     }
   }
@@ -99,21 +95,20 @@ const eventMutationRelationDelete = graphql`
     $toId: String!
     $relationship_type: String!
   ) {
-    eventEdit(id: $id) {
-      relationDelete(toId: $toId, relationship_type: $relationship_type) {
-        ...EventEditionOverview_event
-      }
+    eventRelationDelete(id: $id, toId: $toId, relationship_type: $relationship_type) {
+      ...EventEditionOverview_event
     }
   }
 `;
 
 const eventValidation = (t) => Yup.object().shape({
   name: Yup.string().required(t('This field is required')),
+  event_types: Yup.array().nullable(),
   description: Yup.string().nullable(),
-  start_date: Yup.date()
+  start_time: Yup.date()
     .typeError(t('The value must be a datetime (yyyy-MM-dd hh:mm (a|p)m)'))
     .nullable(),
-  end_date: Yup.date()
+  stop_time: Yup.date()
     .typeError(t('The value must be a datetime (yyyy-MM-dd hh:mm (a|p)m)'))
     .nullable(),
   x_opencti_workflow_id: Yup.object(),
@@ -240,16 +235,17 @@ class EventEditionOverviewComponent extends Component {
     const objectMarking = convertMarkings(event);
     const status = convertStatus(t, event);
     const initialValues = R.pipe(
-      R.assoc('start_date', buildDate(event.start_date)),
-      R.assoc('end_date', buildDate(event.end_date)),
+      R.assoc('start_time', buildDate(event.start_time)),
+      R.assoc('stop_time', buildDate(event.stop_time)),
       R.assoc('createdBy', createdBy),
       R.assoc('objectMarking', objectMarking),
       R.assoc('x_opencti_workflow_id', status),
       R.pick([
         'name',
+        'event_types',
         'description',
-        'start_date',
-        'end_date',
+        'start_time',
+        'stop_time',
         'createdBy',
         'objectMarking',
         'x_opencti_workflow_id',
@@ -282,6 +278,17 @@ class EventEditionOverviewComponent extends Component {
                 <SubscriptionFocus context={context} fieldName="name" />
               }
             />
+            <OpenVocabField
+              label={t('Event types')}
+              type="event-type-ov"
+              name="event_types"
+              onFocus={this.handleChangeFocus.bind(this)}
+              onChange={this.handleSubmitField.bind(this)}
+              containerstyle={{ marginTop: 20, width: '100%' }}
+              variant="edit"
+              multiple={true}
+              editContext={context}
+            />
             <Field
               component={MarkDownField}
               name="description"
@@ -298,7 +305,7 @@ class EventEditionOverviewComponent extends Component {
             />
             <Field
               component={DateTimePickerField}
-              name="start_date"
+              name="start_time"
               onFocus={this.handleChangeFocus.bind(this)}
               onSubmit={this.handleSubmitField.bind(this)}
               TextFieldProps={{
@@ -313,7 +320,7 @@ class EventEditionOverviewComponent extends Component {
             />
             <Field
               component={DateTimePickerField}
-              name="end_date"
+              name="stop_time"
               onFocus={this.handleChangeFocus.bind(this)}
               onSubmit={this.handleSubmitField.bind(this)}
               TextFieldProps={{
@@ -394,9 +401,10 @@ const EventEditionOverview = createFragmentContainer(
       fragment EventEditionOverview_event on Event {
         id
         name
+        event_types
         description
-        start_date
-        end_date
+        start_time
+        stop_time
         createdBy {
           ... on Identity {
             id

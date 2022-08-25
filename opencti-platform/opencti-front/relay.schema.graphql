@@ -6704,13 +6704,13 @@ type Query {
   stixObjectOrStixRelationship(id: String!): StixObjectOrStixRelationship
   stixCoreObjectOrStixCoreRelationship(id: String!): StixCoreObjectOrStixCoreRelationship
   channel(id: String!): Channel
-  channels(first: Int, after: ID, orderBy: ChannelsOrdering, orderMode: OrderingMode, filters: [ChannelsFiltering], filterMode: FilterMode, search: String): ChannelConnection
+  channels(first: Int, after: ID, orderBy: ChannelsOrdering, orderMode: OrderingMode, filters: [ChannelsFiltering!], filterMode: FilterMode, search: String): ChannelConnection
   language(id: String!): Language
   languages(first: Int, after: ID, orderBy: LanguagesOrdering, orderMode: OrderingMode, filters: [LanguagesFiltering!], filterMode: FilterMode, search: String): LanguageConnection
   event(id: String!): Event
-  events(first: Int, after: ID, orderBy: EventsOrdering, orderMode: OrderingMode, filters: [EventsFiltering], filterMode: FilterMode, search: String): EventConnection
+  events(first: Int, after: ID, orderBy: EventsOrdering, orderMode: OrderingMode, filters: [EventsFiltering!], filterMode: FilterMode, search: String): EventConnection
   narrative(id: String!): Narrative
-  narratives(first: Int, after: ID, orderBy: NarrativesOrdering, orderMode: OrderingMode, filters: [NarrativesFiltering], filterMode: FilterMode, search: String): NarrativeConnection
+  narratives(first: Int, after: ID, orderBy: NarrativesOrdering, orderMode: OrderingMode, filters: [NarrativesFiltering!], filterMode: FilterMode, search: String): NarrativeConnection
 }
 
 type Subscription {
@@ -7297,12 +7297,33 @@ type Mutation {
   stixSightingRelationshipAdd(input: StixSightingRelationshipAddInput): StixSightingRelationship
   stixSightingRelationshipEdit(id: ID!): StixSightingRelationshipEditMutations
   channelAdd(input: ChannelAddInput!): Channel
-  channelEdit(id: ID!): ChannelEditMutations
+  channelDelete(id: ID!): ID
+  channelFieldPatch(id: ID!, input: [EditInput]!, commitMessage: String, references: [String]): Channel
+  channelContextPatch(id: ID!, input: EditContext!): Channel
+  channelContextClean(id: ID!): Channel
+  channelRelationAdd(id: ID!, input: StixMetaRelationshipAddInput!): StixMetaRelationship
+  channelRelationDelete(id: ID!, toId: String!, relationship_type: String!): Channel
   languageAdd(input: LanguageAddInput!): Language
+  languageDelete(id: ID!): ID
+  languageFieldPatch(id: ID!, input: [EditInput]!, commitMessage: String, references: [String]): Language
+  languageContextPatch(id: ID!, input: EditContext!): Language
+  languageContextClean(id: ID!): Language
+  languageRelationAdd(id: ID!, input: StixMetaRelationshipAddInput!): StixMetaRelationship
+  languageRelationDelete(id: ID!, toId: String!, relationship_type: String!): Language
   eventAdd(input: EventAddInput!): Event
-  eventEdit(id: ID!): EventEditMutations
+  eventDelete(id: ID!): ID
+  eventFieldPatch(id: ID!, input: [EditInput]!, commitMessage: String, references: [String]): Event
+  eventContextPatch(id: ID!, input: EditContext!): Event
+  eventContextClean(id: ID!): Event
+  eventRelationAdd(id: ID!, input: StixMetaRelationshipAddInput!): StixMetaRelationship
+  eventRelationDelete(id: ID!, toId: String!, relationship_type: String!): Event
   narrativeAdd(input: NarrativeAddInput!): Narrative
-  narrativeEdit(id: ID!): NarrativeEditMutations
+  narrativeDelete(id: ID!): ID
+  narrativeFieldPatch(id: ID!, input: [EditInput]!, commitMessage: String, references: [String]): Narrative
+  narrativeContextPatch(id: ID!, input: EditContext!): Narrative
+  narrativeContextClean(id: ID!): Narrative
+  narrativeRelationAdd(id: ID!, input: StixMetaRelationshipAddInput!): StixMetaRelationship
+  narrativeRelationDelete(id: ID!, toId: String!, relationship_type: String!): Narrative
 }
 
 type Channel implements BasicObject & StixObject & StixCoreObject & StixDomainObject {
@@ -7349,7 +7370,7 @@ type Channel implements BasicObject & StixObject & StixCoreObject & StixDomainOb
 
 enum ChannelsOrdering {
   name
-  type
+  channel_types
   created
   modified
   created_at
@@ -7362,7 +7383,7 @@ enum ChannelsOrdering {
 enum ChannelsFilter {
   name
   aliases
-  type
+  channel_types
   created
   modified
   created_at
@@ -7408,37 +7429,68 @@ input ChannelAddInput {
   update: Boolean
 }
 
-type ChannelEditMutations {
-  delete: ID
-  fieldPatch(input: [EditInput]!, commitMessage: String, references: [String]): Channel
-  contextPatch(input: EditContext): Channel
-  contextClean: Channel
-  relationAdd(input: StixMetaRelationshipAddInput): StixMetaRelationship
-  relationDelete(toId: String!, relationship_type: String!): Channel
-}
-
-type Language implements BasicObject {
+type Language implements BasicObject & StixCoreObject & StixDomainObject & StixObject {
   id: ID!
   standard_id: String!
   entity_type: String!
   parent_types: [String]!
+  x_opencti_stix_ids: [String]
+  is_inferred: Boolean!
+  spec_version: String!
   created_at: DateTime!
   updated_at: DateTime!
+  x_opencti_inferences: [Inference]
+  createdBy: Identity
+  objectMarking: MarkingDefinitionConnection
+  objectLabel: LabelConnection
+  externalReferences(first: Int): ExternalReferenceConnection
+  reports(first: Int): ReportConnection
+  notes(first: Int): NoteConnection
+  opinions(first: Int): OpinionConnection
+  observedData(first: Int): ObservedDataConnection
+  stixCoreRelationships(first: Int, after: ID, orderBy: StixCoreRelationshipsOrdering, orderMode: OrderingMode, fromId: String, toId: String, fromTypes: [String], toTypes: [String], relationship_type: String, startTimeStart: DateTime, startTimeStop: DateTime, stopTimeStart: DateTime, stopTimeStop: DateTime, firstSeenStart: DateTime, firstSeenStop: DateTime, lastSeenStart: DateTime, lastSeenStop: DateTime, confidences: [Int], search: String, filters: [StixCoreRelationshipsFiltering], filterMode: FilterMode): StixCoreRelationshipConnection
+  revoked: Boolean!
+  confidence: Int
+  lang: String
+  created: DateTime
+  modified: DateTime
+  x_opencti_graph_data: String
   name: String!
   aliases: [String]
-  createdBy: Identity
-  stixCoreRelationships(first: Int, after: ID, orderBy: StixCoreRelationshipsOrdering, orderMode: OrderingMode, fromId: String, toId: String, fromTypes: [String], toTypes: [String], relationship_type: String, startTimeStart: DateTime, startTimeStop: DateTime, stopTimeStart: DateTime, stopTimeStop: DateTime, firstSeenStart: DateTime, firstSeenStop: DateTime, lastSeenStart: DateTime, lastSeenStop: DateTime, confidences: [Int], search: String, filters: [StixCoreRelationshipsFiltering], filterMode: FilterMode): StixCoreRelationshipConnection
   creator: User
   toStix: String
+  importFiles(first: Int): FileConnection
+  pendingFiles(first: Int): FileConnection
+  exportFiles(first: Int): FileConnection
   editContext: [EditUserContext]
+  connectors(onlyAlive: Boolean): [Connector]
+  jobs(first: Int): [Work]
+  status: Status
+  workflowEnabled: Boolean
 }
 
 enum LanguagesOrdering {
   name
+  created
+  modified
+  created_at
+  updated_at
+  objectMarking
+  objectLabel
+  x_opencti_workflow_id
 }
 
 enum LanguagesFilter {
   name
+  aliases
+  created
+  modified
+  created_at
+  updated_at
+  createdBy
+  markedBy
+  labelledBy
+  x_opencti_workflow_id
 }
 
 input LanguagesFiltering {
@@ -7460,10 +7512,16 @@ type LanguageEdge {
 
 input LanguageAddInput {
   stix_id: String
-  name: String!
+  x_opencti_stix_ids: [String]
+  name: name_String_NotNull_minLength_2!
+  description: String!
   aliases: [String]
-  created: DateTime
+  confidence: Int
   createdBy: String
+  objectMarking: [String]
+  objectLabel: [String]
+  externalReferences: [String]
+  created: DateTime
   modified: DateTime
   clientMutationId: String
   update: Boolean
@@ -7498,8 +7556,8 @@ type Event implements BasicObject & StixCoreObject & StixDomainObject & StixObje
   name: String!
   description: String
   event_types: [String]
-  start_date: DateTime
-  end_date: DateTime
+  start_time: DateTime
+  stop_time: DateTime
   aliases: [String]
   creator: User
   toStix: String
@@ -7515,6 +7573,7 @@ type Event implements BasicObject & StixCoreObject & StixDomainObject & StixObje
 
 enum EventsOrdering {
   name
+  event_types
   created
   modified
   created_at
@@ -7527,7 +7586,7 @@ enum EventsOrdering {
 enum EventsFilter {
   name
   aliases
-  channel_types
+  event_types
   created
   modified
   created_at
@@ -7561,8 +7620,8 @@ input EventAddInput {
   name: name_String_NotNull_minLength_2!
   description: String!
   event_types: [String]
-  start_date: DateTime
-  end_date: DateTime
+  start_time: DateTime
+  stop_time: DateTime
   aliases: [String]
   confidence: Int
   createdBy: String
@@ -7573,15 +7632,6 @@ input EventAddInput {
   modified: DateTime
   clientMutationId: String
   update: Boolean
-}
-
-type EventEditMutations {
-  delete: ID
-  fieldPatch(input: [EditInput]!, commitMessage: String, references: [String]): Event
-  contextPatch(input: EditContext): Event
-  contextClean: Event
-  relationAdd(input: StixMetaRelationshipAddInput): StixMetaRelationship
-  relationDelete(toId: String!, relationship_type: String!): Event
 }
 
 type Narrative implements BasicObject & StixCoreObject & StixDomainObject & StixObject {
@@ -7628,7 +7678,7 @@ type Narrative implements BasicObject & StixCoreObject & StixDomainObject & Stix
 
 enum NarrativesOrdering {
   name
-  type
+  narrative_types
   created
   modified
   created_at
@@ -7641,7 +7691,7 @@ enum NarrativesOrdering {
 enum NarrativesFilter {
   name
   aliases
-  type
+  narrative_types
   created
   modified
   created_at
@@ -7685,13 +7735,4 @@ input NarrativeAddInput {
   modified: DateTime
   clientMutationId: String
   update: Boolean
-}
-
-type NarrativeEditMutations {
-  delete: ID
-  fieldPatch(input: [EditInput]!, commitMessage: String, references: [String]): Narrative
-  contextPatch(input: EditContext): Narrative
-  contextClean: Narrative
-  relationAdd(input: StixMetaRelationshipAddInput): StixMetaRelationship
-  relationDelete(toId: String!, relationship_type: String!): Narrative
 }

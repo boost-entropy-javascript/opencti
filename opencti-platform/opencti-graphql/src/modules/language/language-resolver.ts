@@ -1,35 +1,47 @@
-import type { EditUserContext, Resolvers, StixCoreRelationshipConnection, User } from '../../generated/graphql';
+import type { Resolvers } from '../../generated/graphql';
 import { addLanguage, findAll, findById } from './language-domain';
-import { batchCreatedBy, stixCoreRelationships } from '../../domain/stixCoreObject';
-import { batchLoader, stixLoadByIdStringify } from '../../database/middleware';
-import { creator } from '../../domain/log';
-import { ABSTRACT_STIX_CORE_OBJECT } from '../../schema/general';
-import { fetchEditContext } from '../../database/redis';
-
-const createdByLoader = batchLoader(batchCreatedBy);
+import { buildRefRelationKey } from '../../schema/general';
+import { RELATION_CREATED_BY, RELATION_OBJECT_LABEL, RELATION_OBJECT_MARKING } from '../../schema/stixMetaRelationship';
+import {
+  stixDomainObjectAddRelation,
+  stixDomainObjectCleanContext,
+  stixDomainObjectDelete, stixDomainObjectDeleteRelation,
+  stixDomainObjectEditContext,
+  stixDomainObjectEditField
+} from '../../domain/stixDomainObject';
 
 const languageResolvers: Resolvers = {
   Query: {
     language: (_, { id }, { user }) => findById(user, id),
     languages: (_, args, { user }) => findAll(user, args),
   },
-  Language: {
-    // Resolution
-    createdBy: (stixCoreObject, _, { user }) => createdByLoader.load(stixCoreObject.id, user),
-    stixCoreRelationships: (stixCoreObject, args, { user }) => {
-      return stixCoreRelationships(user, stixCoreObject.id, args) as unknown as StixCoreRelationshipConnection;
-    },
-    // Technical
-    creator: (stixCoreObject, _, { user }) => {
-      return creator(user, stixCoreObject.id, ABSTRACT_STIX_CORE_OBJECT) as unknown as User;
-    },
-    toStix: (stixCoreObject, _, { user }) => stixLoadByIdStringify(user, stixCoreObject.id),
-    editContext: (stixCoreObject) => {
-      return fetchEditContext(stixCoreObject.id) as unknown as Array<EditUserContext>;
-    },
+  LanguagesFilter: {
+    createdBy: buildRefRelationKey(RELATION_CREATED_BY),
+    markedBy: buildRefRelationKey(RELATION_OBJECT_MARKING),
+    labelledBy: buildRefRelationKey(RELATION_OBJECT_LABEL),
   },
   Mutation: {
-    languageAdd: (_, { input }, { user }) => addLanguage(user, input),
+    languageAdd: (_, { input }, { user }) => {
+      return addLanguage(user, input);
+    },
+    languageDelete: (_, { id }, { user }) => {
+      return stixDomainObjectDelete(user, id);
+    },
+    languageFieldPatch: (_, { id, input, commitMessage, references }, { user }) => {
+      return stixDomainObjectEditField(user, id, input, { commitMessage, references });
+    },
+    languageContextPatch: (_, { id, input }, { user }) => {
+      return stixDomainObjectEditContext(user, id, input);
+    },
+    languageContextClean: (_, { id }, { user }) => {
+      return stixDomainObjectCleanContext(user, id);
+    },
+    languageRelationAdd: (_, { id, input }, { user }) => {
+      return stixDomainObjectAddRelation(user, id, input);
+    },
+    languageRelationDelete: (_, { id, toId, relationship_type: relationshipType }, { user }) => {
+      return stixDomainObjectDeleteRelation(user, id, toId, relationshipType);
+    },
   },
 };
 

@@ -18,7 +18,11 @@ import syncManager from './manager/syncManager';
 import retentionManager from './manager/retentionManager';
 import httpServer from './http/httpServer';
 
-// Http server
+// region static graphql modules
+import './modules/index';
+// endregion
+
+// region dynamic modules
 export const startModules = async () => {
   // region API initialization
   if (ENABLED_API) {
@@ -138,3 +142,4 @@ export const shutdownModules = async () => {
   }
   // endregion
 };
+// endregion
