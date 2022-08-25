@@ -38,12 +38,12 @@ import {
   ENTITY_MAC_ADDR,
   ENTITY_NETWORK_TRAFFIC,
   ENTITY_PROCESS,
-  ENTITY_SOFTWARE,
+  ENTITY_SOFTWARE, ENTITY_TEXT,
   ENTITY_URL,
   ENTITY_USER_ACCOUNT,
   ENTITY_WINDOWS_REGISTRY_KEY,
   ENTITY_WINDOWS_REGISTRY_VALUE_TYPE,
-  isStixCyberObservable,
+  isStixCyberObservable
 } from '../schema/stixCyberObservable';
 import {
   RELATION_ATTRIBUTED_TO,
@@ -115,6 +115,7 @@ import {
 } from '../schema/stixCyberObservableRelationship';
 import { ABSTRACT_STIX_CYBER_OBSERVABLE } from '../schema/general';
 import { ENTITY_TYPE_EVENT } from '../modules/event/event-types';
+import { ENTITY_TYPE_NARRATIVE } from '../modules/narrative/narrative-types';
 
 const MAX_TRANSIENT_STIX_IDS = 200;
 export const STIX_SPEC_VERSION = '2.1';
@@ -144,7 +145,7 @@ export const cleanStixIds = (ids: Array<string>, maxStixIds = MAX_TRANSIENT_STIX
 };
 
 type RelationshipMappings = { [k: `${string}_${string}`]: Array<string>; };
-export const stixCoreRelationshipsMapping: RelationshipMappings = {
+export const nativeStixCoreRelationshipsMapping: RelationshipMappings = {
   // From ATTACK_PATTERN
   [`${ENTITY_TYPE_ATTACK_PATTERN}_${ENTITY_TYPE_ATTACK_PATTERN}`]: [RELATION_SUBTECHNIQUE_OF],
   [`${ENTITY_TYPE_ATTACK_PATTERN}_${ENTITY_TYPE_IDENTITY_INDIVIDUAL}`]: [RELATION_TARGETS],
@@ -180,15 +181,11 @@ export const stixCoreRelationshipsMapping: RelationshipMappings = {
   [`${ENTITY_TYPE_COURSE_OF_ACTION}_${ENTITY_TYPE_TOOL}`]: [RELATION_MITIGATES],
   [`${ENTITY_TYPE_COURSE_OF_ACTION}_${ENTITY_TYPE_VULNERABILITY}`]: [RELATION_MITIGATES, RELATION_REMEDIATES],
   // From INDIVIDUAL
-  [`${ENTITY_TYPE_IDENTITY_INDIVIDUAL}_${ENTITY_TYPE_IDENTITY_INDIVIDUAL}`]: [RELATION_PART_OF],
-  [`${ENTITY_TYPE_IDENTITY_INDIVIDUAL}_${ENTITY_TYPE_IDENTITY_ORGANIZATION}`]: [RELATION_PART_OF],
   [`${ENTITY_TYPE_IDENTITY_INDIVIDUAL}_${ENTITY_TYPE_LOCATION_CITY}`]: [RELATION_LOCATED_AT],
   [`${ENTITY_TYPE_IDENTITY_INDIVIDUAL}_${ENTITY_TYPE_LOCATION_COUNTRY}`]: [RELATION_LOCATED_AT],
   [`${ENTITY_TYPE_IDENTITY_INDIVIDUAL}_${ENTITY_TYPE_LOCATION_POSITION}`]: [RELATION_LOCATED_AT],
   [`${ENTITY_TYPE_IDENTITY_INDIVIDUAL}_${ENTITY_TYPE_LOCATION_REGION}`]: [RELATION_LOCATED_AT],
   // From ORGANIZATION
-  [`${ENTITY_TYPE_IDENTITY_ORGANIZATION}_${ENTITY_TYPE_IDENTITY_ORGANIZATION}`]: [RELATION_PART_OF],
-  [`${ENTITY_TYPE_IDENTITY_ORGANIZATION}_${ENTITY_TYPE_IDENTITY_SECTOR}`]: [RELATION_PART_OF],
   [`${ENTITY_TYPE_IDENTITY_ORGANIZATION}_${ENTITY_TYPE_LOCATION_CITY}`]: [RELATION_LOCATED_AT],
   [`${ENTITY_TYPE_IDENTITY_ORGANIZATION}_${ENTITY_TYPE_LOCATION_COUNTRY}`]: [RELATION_LOCATED_AT],
   [`${ENTITY_TYPE_IDENTITY_ORGANIZATION}_${ENTITY_TYPE_LOCATION_POSITION}`]: [RELATION_LOCATED_AT],
@@ -227,7 +224,6 @@ export const stixCoreRelationshipsMapping: RelationshipMappings = {
   [`${ENTITY_TYPE_INCIDENT}_${ENTITY_TYPE_TOOL}`]: [RELATION_USES],
   [`${ENTITY_TYPE_INCIDENT}_${ENTITY_TYPE_VULNERABILITY}`]: [RELATION_TARGETS],
   // From INDICATOR
-  [`${ENTITY_TYPE_INDICATOR}_${ENTITY_HASHED_OBSERVABLE_ARTIFACT}`]: [RELATION_BASED_ON],
   [`${ENTITY_TYPE_INDICATOR}_${ABSTRACT_STIX_CYBER_OBSERVABLE}`]: [RELATION_BASED_ON],
   [`${ENTITY_TYPE_INDICATOR}_${ENTITY_TYPE_ATTACK_PATTERN}`]: [RELATION_INDICATES],
   [`${ENTITY_TYPE_INDICATOR}_${ENTITY_TYPE_CAMPAIGN}`]: [RELATION_INDICATES],
@@ -241,7 +237,6 @@ export const stixCoreRelationshipsMapping: RelationshipMappings = {
   [`${ENTITY_TYPE_INDICATOR}_${ENTITY_TYPE_TOOL}`]: [RELATION_INDICATES],
   [`${ENTITY_TYPE_INDICATOR}_${ENTITY_TYPE_VULNERABILITY}`]: [RELATION_INDICATES],
   // From INFRASTRUCTURE
-  [`${ENTITY_TYPE_INFRASTRUCTURE}_${ENTITY_HASHED_OBSERVABLE_ARTIFACT}`]: [RELATION_CONSISTS_OF],
   [`${ENTITY_TYPE_INFRASTRUCTURE}_${ABSTRACT_STIX_CYBER_OBSERVABLE}`]: [RELATION_CONSISTS_OF],
   [`${ENTITY_TYPE_INFRASTRUCTURE}_${ENTITY_DOMAIN_NAME}`]: [RELATION_COMMUNICATES_WITH],
   [`${ENTITY_TYPE_INFRASTRUCTURE}_${ENTITY_IPV4_ADDR}`]: [RELATION_COMMUNICATES_WITH],
@@ -381,6 +376,14 @@ export const stixCoreRelationshipsMapping: RelationshipMappings = {
   [`${ENTITY_HOSTNAME}_${ENTITY_IPV6_ADDR}`]: [RELATION_COMMUNICATES_WITH],
   [`${ENTITY_HOSTNAME}_${ENTITY_HASHED_OBSERVABLE_STIX_FILE}`]: [RELATION_DROPS],
   // Observables / SDO Stix Core Relationships
+  // From URL
+  [`${ENTITY_URL}_${ENTITY_TYPE_NARRATIVE}`]: [RELATION_USES],
+  // From Text
+  [`${ENTITY_TEXT}_${ENTITY_TYPE_NARRATIVE}`]: [RELATION_USES],
+  // From Artifact
+  [`${ENTITY_HASHED_OBSERVABLE_ARTIFACT}_${ENTITY_TYPE_NARRATIVE}`]: [RELATION_USES],
+  // From File
+  [`${ENTITY_HASHED_OBSERVABLE_STIX_FILE}_${ENTITY_TYPE_NARRATIVE}`]: [RELATION_USES],
   // From IPV4_ADDR
   [`${ENTITY_IPV4_ADDR}_${ENTITY_TYPE_LOCATION_CITY}`]: [RELATION_LOCATED_AT],
   [`${ENTITY_IPV4_ADDR}_${ENTITY_TYPE_LOCATION_COUNTRY}`]: [RELATION_LOCATED_AT],
@@ -399,8 +402,7 @@ export const stixCoreRelationshipsMapping: RelationshipMappings = {
   [`${ENTITY_DOMAIN_NAME}_${ENTITY_DOMAIN_NAME}`]: [RELATION_RESOLVES_TO],
   [`${ENTITY_DOMAIN_NAME}_${ENTITY_IPV4_ADDR}`]: [RELATION_RESOLVES_TO],
   [`${ENTITY_DOMAIN_NAME}_${ENTITY_IPV6_ADDR}`]: [RELATION_RESOLVES_TO],
-  [`${ENTITY_IPV4_ADDR}_${ENTITY_AUTONOMOUS_SYSTEM}`]: [RELATION_BELONGS_TO],
-  [`${ENTITY_IPV6_ADDR}_${ENTITY_AUTONOMOUS_SYSTEM}`]: [RELATION_BELONGS_TO],
+  [`${ENTITY_DOMAIN_NAME}_${ENTITY_TYPE_NARRATIVE}`]: [RELATION_USES],
   // From STIX_FILE
   [`${ENTITY_HASHED_OBSERVABLE_STIX_FILE}_${ENTITY_TYPE_ATTACK_PATTERN}`]: [RELATION_USES],
   [`${ENTITY_HASHED_OBSERVABLE_STIX_FILE}_${ENTITY_HASHED_OBSERVABLE_STIX_FILE}`]: [RELATION_DROPS, RELATION_DOWNLOADS],
@@ -413,43 +415,35 @@ export const stixCoreRelationshipsMapping: RelationshipMappings = {
   [`${ENTITY_HASHED_OBSERVABLE_ARTIFACT}_${ENTITY_IPV4_ADDR}`]: [RELATION_COMMUNICATES_WITH],
   [`${ENTITY_HASHED_OBSERVABLE_ARTIFACT}_${ENTITY_IPV6_ADDR}`]: [RELATION_COMMUNICATES_WITH],
   [`${ENTITY_HASHED_OBSERVABLE_ARTIFACT}_${ENTITY_DOMAIN_NAME}`]: [RELATION_COMMUNICATES_WITH],
-  // From SOFTWARE
-  [`${ENTITY_SOFTWARE}_${ENTITY_TYPE_VULNERABILITY}`]: [RELATION_HAS],
   // From INDICATOR
   [`${ENTITY_TYPE_INDICATOR}_${RELATION_USES}`]: [RELATION_INDICATES],
-  // Relations to Relations: DISCUSS IMPLEMENTATION!!
+};
+
+export const extendedStixCoreRelationshipMapping: RelationshipMappings = {
+  // From SOFTWARE
+  [`${ENTITY_SOFTWARE}_${ENTITY_TYPE_VULNERABILITY}`]: [RELATION_HAS],
+  // From ORGANIZATION
+  [`${ENTITY_TYPE_IDENTITY_ORGANIZATION}_${ENTITY_TYPE_IDENTITY_ORGANIZATION}`]: [RELATION_PART_OF],
+  [`${ENTITY_TYPE_IDENTITY_ORGANIZATION}_${ENTITY_TYPE_IDENTITY_SECTOR}`]: [RELATION_PART_OF],
+  // From INDIVIDUAL
+  [`${ENTITY_TYPE_IDENTITY_INDIVIDUAL}_${ENTITY_TYPE_IDENTITY_INDIVIDUAL}`]: [RELATION_PART_OF],
+  [`${ENTITY_TYPE_IDENTITY_INDIVIDUAL}_${ENTITY_TYPE_IDENTITY_ORGANIZATION}`]: [RELATION_PART_OF],
+  // FROM RELATIONS
   [`${RELATION_TARGETS}_${ENTITY_TYPE_LOCATION_REGION}`]: [RELATION_LOCATED_AT],
   [`${RELATION_TARGETS}_${ENTITY_TYPE_LOCATION_COUNTRY}`]: [RELATION_LOCATED_AT],
   [`${RELATION_TARGETS}_${ENTITY_TYPE_LOCATION_CITY}`]: [RELATION_LOCATED_AT],
   [`${RELATION_TARGETS}_${ENTITY_TYPE_LOCATION_POSITION}`]: [RELATION_LOCATED_AT],
 };
 
-export const checkStixCoreRelationshipMapping = (fromType: string, toType: string, relationshipType: string): boolean => {
-  // RELATED_TO and REVOKED_BY are available for every entity
-  if (relationshipType === RELATION_RELATED_TO || relationshipType === RELATION_REVOKED_BY) {
-    return true;
-  }
-  // If core relationship start or target a cyber observable
-  // All relationships here are a STIX specification extension.
-  if (isStixCyberObservable(toType)) {
-    const mappingElements = stixCoreRelationshipsMapping[`${fromType}_${ABSTRACT_STIX_CYBER_OBSERVABLE}`];
-    const haveKey = R.includes(`${fromType}_${ABSTRACT_STIX_CYBER_OBSERVABLE}`, R.keys(stixCoreRelationshipsMapping));
-    const haveAccessibleTarget = R.includes(relationshipType, mappingElements);
-    if (haveKey && haveAccessibleTarget) {
-      return true;
-    }
-  }
-  if (isStixCyberObservable(fromType)) {
-    const mappingElements = stixCoreRelationshipsMapping[`${ABSTRACT_STIX_CYBER_OBSERVABLE}_${toType}`];
-    const haveKey = R.includes(`${ABSTRACT_STIX_CYBER_OBSERVABLE}_${toType}`, R.keys(stixCoreRelationshipsMapping));
-    const haveAccessibleTarget = R.includes(relationshipType, mappingElements);
-    if (haveKey && haveAccessibleTarget) {
-      return true;
-    }
-  }
-  // Check if combination is valid
-  const targetRelations = stixCoreRelationshipsMapping[`${fromType}_${toType}`] || [];
-  return R.includes(relationshipType, targetRelations);
+export const customStixCoreRelationshipsMapping: RelationshipMappings = {
+  // From ATTACK_PATTERN
+  [`${ENTITY_TYPE_ATTACK_PATTERN}_${ENTITY_TYPE_ATTACK_PATTERN}`]: [RELATION_SUBTECHNIQUE_OF],
+};
+
+export const stixCoreRelationshipsMapping: RelationshipMappings = {
+  ...nativeStixCoreRelationshipsMapping,
+  ...extendedStixCoreRelationshipMapping,
+  ...customStixCoreRelationshipsMapping
 };
 
 export const stixCyberObservableRelationshipsMapping = {
@@ -507,6 +501,34 @@ export const stixCyberObservableRelationshipsMapping = {
   [`${ENTITY_USER_ACCOUNT}_${ENTITY_WINDOWS_REGISTRY_KEY}`]: [RELATION_CREATOR_USER],
   // From WINDOWS_REGISTRY_KEY
   [`${ENTITY_WINDOWS_REGISTRY_KEY}_${ENTITY_WINDOWS_REGISTRY_VALUE_TYPE}`]: [RELATION_VALUES]
+};
+
+export const checkStixCoreRelationshipMapping = (fromType: string, toType: string, relationshipType: string): boolean => {
+  // RELATED_TO and REVOKED_BY are available for every entity
+  if (relationshipType === RELATION_RELATED_TO || relationshipType === RELATION_REVOKED_BY) {
+    return true;
+  }
+  // If core relationship start or target a cyber observable
+  // All relationships here are a STIX specification extension.
+  if (isStixCyberObservable(toType)) {
+    const mappingElements = stixCoreRelationshipsMapping[`${fromType}_${ABSTRACT_STIX_CYBER_OBSERVABLE}`] ?? [];
+    const haveKey = R.includes(`${fromType}_${ABSTRACT_STIX_CYBER_OBSERVABLE}`, R.keys(stixCoreRelationshipsMapping));
+    const haveAccessibleTarget = R.includes(relationshipType, mappingElements);
+    if (haveKey && haveAccessibleTarget) {
+      return true;
+    }
+  }
+  if (isStixCyberObservable(fromType)) {
+    const mappingElements = stixCoreRelationshipsMapping[`${ABSTRACT_STIX_CYBER_OBSERVABLE}_${toType}`] ?? [];
+    const haveKey = R.includes(`${ABSTRACT_STIX_CYBER_OBSERVABLE}_${toType}`, R.keys(stixCoreRelationshipsMapping));
+    const haveAccessibleTarget = R.includes(relationshipType, mappingElements);
+    if (haveKey && haveAccessibleTarget) {
+      return true;
+    }
+  }
+  // Check if combination is valid
+  const targetRelations = stixCoreRelationshipsMapping[`${fromType}_${toType}`] || [];
+  return R.includes(relationshipType, targetRelations);
 };
 
 // Build map of input fields for all observable types
