@@ -406,7 +406,7 @@ describe('Elasticsearch pagination', () => {
   it('should entity paginate everything', async () => {
     const data = await elPaginate(ADMIN_USER, READ_ENTITIES_INDICES);
     expect(data).not.toBeNull();
-    expect(data.edges.length).toEqual(97);
+    expect(data.edges.length).toEqual(98);
     const filterBaseTypes = R.uniq(R.map((e) => e.node.base_type, data.edges));
     expect(filterBaseTypes.length).toEqual(1);
     expect(R.head(filterBaseTypes)).toEqual('ENTITY');
@@ -423,7 +423,7 @@ describe('Elasticsearch pagination', () => {
       after: 'WyJleHRlcm5hbC1yZWZlcmVuY2UtLTUzYjNhZGI2LWQ4M2YtNWQyMS05Mzc2LTQ1YTE5OGU0NDA3ZSJd',
     });
     expect(data).not.toBeNull();
-    expect(data.edges.length).toEqual(66);
+    expect(data.edges.length).toEqual(67);
   });
   it('should entity paginate with single type', async () => {
     // first = 200, after, types = null, filters = [], search = null,
@@ -477,7 +477,7 @@ describe('Elasticsearch pagination', () => {
   it('should entity paginate with field exist filter', async () => {
     const filters = [{ key: 'x_opencti_color', operator: undefined, values: ['EXISTS'] }];
     const data = await elPaginate(ADMIN_USER, READ_ENTITIES_INDICES, { filters });
-    expect(data.edges.length).toEqual(6);
+    expect(data.edges.length).toEqual(7);
   });
   it('should entity paginate with equality filter', async () => {
     // eq operation will use the field.keyword to do an exact field equality
@@ -492,7 +492,7 @@ describe('Elasticsearch pagination', () => {
   it('should entity paginate with match filter', async () => {
     let filters = [{ key: 'entity_type', operator: 'match', values: ['marking'] }];
     let data = await elPaginate(ADMIN_USER, READ_ENTITIES_INDICES, { filters });
-    expect(data.edges.length).toEqual(6); // The 4 Default TLP + MITRE Corporation
+    expect(data.edges.length).toEqual(7); // The 4 Default TLP + MITRE Corporation
     // Verify that nothing is found in this case if using the eq operator
     filters = [{ key: 'entity_type', operator: 'eq', values: ['marking'] }];
     data = await elPaginate(ADMIN_USER, READ_ENTITIES_INDICES, { filters });
@@ -507,7 +507,7 @@ describe('Elasticsearch pagination', () => {
       { key: 'color', operator: undefined, values: [null] },
     ];
     data = await elPaginate(ADMIN_USER, READ_ENTITIES_INDICES, { filters });
-    expect(data.edges.length).toEqual(17);
+    expect(data.edges.length).toEqual(18);
     filters = [
       { key: 'created', operator: 'lte', values: ['2017-06-01T00:00:00.000Z'] },
       { key: 'created', operator: 'gt', values: ['2020-03-01T14:06:06.255Z'] },
@@ -517,7 +517,7 @@ describe('Elasticsearch pagination', () => {
   });
   it('should entity paginate with date ordering', async () => {
     const data = await elPaginate(ADMIN_USER, READ_ENTITIES_INDICES, { orderBy: 'created', orderMode: 'asc' });
-    expect(data.edges.length).toEqual(56);
+    expect(data.edges.length).toEqual(57);
     const createdDates = R.map((e) => e.node.created, data.edges);
     let previousCreatedDate = null;
     for (let index = 0; index < createdDates.length; index += 1) {
@@ -540,13 +540,14 @@ describe('Elasticsearch pagination', () => {
       orderBy: 'definition',
       orderMode: 'desc',
     });
-    expect(data.edges.length).toEqual(6);
+    expect(data.edges.length).toEqual(7);
     const markings = R.map((e) => e.node.definition, data.edges);
-    expect(markings[0]).toEqual('TLP:WHITE');
-    expect(markings[1]).toEqual('TLP:TEST');
-    expect(markings[2]).toEqual('TLP:RED');
-    expect(markings[3]).toEqual('TLP:GREEN');
-    expect(markings[4]).toEqual('TLP:AMBER');
+    expect(markings[0]).toEqual('TLP:TEST');
+    expect(markings[1]).toEqual('TLP:RED');
+    expect(markings[2]).toEqual('TLP:GREEN');
+    expect(markings[3]).toEqual('TLP:CLEAR');
+    expect(markings[4]).toEqual('TLP:AMBER+STRICT');
+    expect(markings[5]).toEqual('TLP:AMBER');
   });
   it('should relation paginate everything', async () => {
     let data = await elPaginate(ADMIN_USER, READ_RELATIONSHIPS_INDICES);
