@@ -31,6 +31,7 @@ import { isStixMetaRelationship } from './stixMetaRelationship';
 import { isStixSightingRelationship } from './stixSightingRelationship';
 import { isStixCyberObservableRelationship } from './stixCyberObservableRelationship';
 import { isEmptyField, isNotEmptyField, UPDATE_OPERATION_ADD, UPDATE_OPERATION_REMOVE } from '../database/utils';
+import { now } from '../utils/format';
 
 // region hashes
 const MD5 = 'MD5';
@@ -117,6 +118,9 @@ const stixBaseCyberObservableContribution = {
     [C.ENTITY_HOSTNAME]: [{ src: 'value' }],
     [C.ENTITY_USER_AGENT]: [{ src: 'value' }],
     [C.ENTITY_TEXT]: [{ src: 'value' }],
+    [C.ENTITY_BANK_ACCOUNT]: [{ src: 'iban' }],
+    [C.ENTITY_PHONE_NUMBER]: [{ src: 'value' }],
+    [C.ENTITY_PAYMENT_CARD]: [{ src: 'number' }],
     // Types embedded
     [C.ENTITY_EMAIL_MIME_PART_TYPE]: [], // ALL
     [C.ENTITY_WINDOWS_REGISTRY_VALUE_TYPE]: [], // ALL
@@ -398,7 +402,10 @@ const generateStixId = (type, data) => {
 };
 
 export const generateInternalId = () => uuidv4();
-export const generateWorkId = () => `opencti-work--${generateInternalId()}`;
+export const generateWorkId = (connectorId) => {
+  const timestamp = now();
+  return { id: `work_${connectorId}_${timestamp}`, timestamp };
+};
 export const generateStandardId = (type, data) => {
   // Entities
   if (isStixMetaObject(type)) return generateStixId(type, data);
