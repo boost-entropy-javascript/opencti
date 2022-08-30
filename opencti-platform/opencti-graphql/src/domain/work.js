@@ -1,7 +1,7 @@
 import moment from 'moment';
 import * as R from 'ramda';
 import {
-  elDeleteInstanceIds,
+  elDeleteInstances,
   elIndex,
   elLoadById,
   elPaginate,
@@ -38,7 +38,7 @@ export const workToExportFile = (work) => {
 
 const loadWorkById = async (user, workId) => {
   const action = await elLoadById(user, workId, ENTITY_TYPE_WORK, READ_INDEX_HISTORY);
-  return R.assoc('id', workId, action);
+  return action ? R.assoc('id', workId, action) : action;
 };
 
 export const findById = (user, workId) => {
@@ -89,14 +89,16 @@ export const loadExportWorksAsProgressFiles = async (user, sourceId) => {
 
 export const deleteWorksRaw = async (works) => {
   const workIds = works.map((w) => w.internal_id);
-  await elDeleteInstanceIds(works);
+  await elDeleteInstances(works);
   await redisDeleteWorks(workIds);
   return workIds;
 };
 
 export const deleteWork = async (user, workId) => {
   const work = await loadWorkById(user, workId);
-  await deleteWorksRaw([work]);
+  if (work) {
+    await deleteWorksRaw([work]);
+  }
   return workId;
 };
 
