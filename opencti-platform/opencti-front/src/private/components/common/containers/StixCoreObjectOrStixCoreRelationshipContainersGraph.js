@@ -895,6 +895,20 @@ const StixCoreObjectOrStixCoreRelationshipContainersGraph = createRefetchContain
                   first_seen
                   last_seen
                 }
+                ... on Event {
+                  name
+                  start_time
+                  stop_time
+                }
+                ... on Channel {
+                  name
+                }
+                ... on Narrative {
+                  name
+                }
+                ... on Language {
+                  name
+                }
                 ... on StixCyberObservable {
                   observable_value
                 }

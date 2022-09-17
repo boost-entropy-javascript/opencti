@@ -21,7 +21,7 @@ import { execPython3, executePython } from '../../src/python/pythonBridge';
 import { storeFullLoadById } from '../../src/database/middleware';
 import { checkInstanceDiff } from '../utils/testStream';
 import { shutdownModules, startModules } from '../../src/modules';
-import { FROM_START_STR, now } from '../../src/utils/format';
+import { FROM_START, now } from '../../src/utils/format';
 import { SYSTEM_USER } from '../../src/utils/access';
 import { stixCoreObjectImportPush } from '../../src/domain/stixCoreObject';
 import { convertStoreToStix } from '../../src/database/stix-converter';
@@ -134,7 +134,7 @@ describe('Database sync testing', () => {
       const { objectMap, relMap, initStixReport } = await checkPreSyncContent();
       // Sync
       await startModules();
-      const syncOpts = [API_URI, API_TOKEN, SYNC_RAW_START_REMOTE_URI, API_TOKEN, RAW_EVENTS_SIZE, '0'];
+      const syncOpts = [API_URI, API_TOKEN, SYNC_RAW_START_REMOTE_URI, API_TOKEN, RAW_EVENTS_SIZE, '0', 'None'];
       const execution = await execPython3(PYTHON_PATH, 'local_synchronizer.py', syncOpts);
       expect(execution).not.toBeNull();
       expect(execution.status).toEqual('success');
@@ -157,7 +157,7 @@ describe('Database sync testing', () => {
         SYNC_LIVE_START_REMOTE_URI,
         API_TOKEN,
         SYNC_LIVE_EVENTS_SIZE,
-        FROM_START_STR,
+        FROM_START,
         now(),
         'live',
       ];
