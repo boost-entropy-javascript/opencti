@@ -1,7 +1,7 @@
 import channelTypeDefs from './channel.graphql';
 import convertChannelToStix from './channel-converter';
 import { NAME_FIELD, normalizeName } from '../../schema/identifier';
-import { RELATION_BELONGS_TO, RELATION_TARGETS, RELATION_USES } from "../../schema/stixCoreRelationship";
+import { RELATION_BELONGS_TO, RELATION_TARGETS, RELATION_USES } from '../../schema/stixCoreRelationship';
 import {
   ENTITY_TYPE_ATTACK_PATTERN,
   ENTITY_TYPE_IDENTITY_INDIVIDUAL,
@@ -25,10 +25,11 @@ import { ENTITY_TYPE_EVENT } from '../event/event-types';
 import {
   ENTITY_DOMAIN_NAME,
   ENTITY_HASHED_OBSERVABLE_STIX_FILE,
-  ENTITY_HOSTNAME,
+  ENTITY_HOSTNAME, ENTITY_MEDIA_CONTENT,
   ENTITY_TEXT,
-  ENTITY_URL, ENTITY_USER_ACCOUNT
-} from "../../schema/stixCyberObservable";
+  ENTITY_URL,
+  ENTITY_USER_ACCOUNT
+} from '../../schema/stixCyberObservable';
 import { REL_EXTENDED, REL_NEW } from '../../database/stix';
 
 const RELATION_AMPLIFIES = 'amplifies';
@@ -89,6 +90,7 @@ const CHANNEL_DEFINITION: ModuleDefinition<StoreEntityChannel> = {
         { name: ENTITY_TEXT, type: REL_NEW },
         { name: ENTITY_DOMAIN_NAME, type: REL_NEW },
         { name: ENTITY_HOSTNAME, type: REL_NEW },
+        { name: ENTITY_MEDIA_CONTENT, type: REL_NEW },
       ] },
     { name: RELATION_AMPLIFIES,
       targets: [
@@ -97,6 +99,8 @@ const CHANNEL_DEFINITION: ModuleDefinition<StoreEntityChannel> = {
     { name: RELATION_BELONGS_TO,
       targets: [
         { name: ENTITY_USER_ACCOUNT, type: REL_EXTENDED },
+        { name: ENTITY_TYPE_IDENTITY_INDIVIDUAL, type: REL_EXTENDED },
+        { name: ENTITY_TYPE_IDENTITY_ORGANIZATION, type: REL_EXTENDED },
       ] }
   ],
   converter: convertChannelToStix

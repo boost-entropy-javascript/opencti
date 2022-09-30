@@ -35,10 +35,11 @@ import {
   ENTITY_HOSTNAME,
   ENTITY_IPV4_ADDR,
   ENTITY_IPV6_ADDR,
-  ENTITY_MAC_ADDR,
+  ENTITY_MAC_ADDR, ENTITY_MEDIA_CONTENT,
   ENTITY_NETWORK_TRAFFIC,
   ENTITY_PROCESS,
-  ENTITY_SOFTWARE, ENTITY_TEXT,
+  ENTITY_SOFTWARE,
+  ENTITY_TEXT,
   ENTITY_URL,
   ENTITY_USER_ACCOUNT,
   ENTITY_WINDOWS_REGISTRY_KEY,
@@ -893,6 +894,16 @@ export const stixCoreRelationshipsMapping: RelationshipMappings = {
   [`${ENTITY_SOFTWARE}_${ENTITY_TYPE_VULNERABILITY}`]: [
     { name: RELATION_HAS, type: REL_EXTENDED }
   ],
+  // From MEDIA CONTENT
+  [`${ENTITY_MEDIA_CONTENT}_${ENTITY_TYPE_IDENTITY_INDIVIDUAL}`]: [
+    { name: RELATION_AUTHORED_BY, type: REL_EXTENDED }
+  ],
+  [`${ENTITY_MEDIA_CONTENT}_${ENTITY_TYPE_IDENTITY_ORGANIZATION}`]: [
+    { name: RELATION_AUTHORED_BY, type: REL_EXTENDED }
+  ],
+  [`${ENTITY_MEDIA_CONTENT}_${ENTITY_USER_ACCOUNT}`]: [
+    { name: RELATION_AUTHORED_BY, type: REL_EXTENDED }
+  ],
   // endregion
   // region RELATIONS TO RELATIONS: DISCUSS IMPLEMENTATION!!
   [`${ENTITY_TYPE_INDICATOR}_${RELATION_USES}`]: [
@@ -1057,7 +1068,7 @@ const stixCyberObservableRelationshipsMapping: RelationshipMappings = {
   // From WINDOWS_REGISTRY_KEY
   [`${ENTITY_WINDOWS_REGISTRY_KEY}_${ENTITY_WINDOWS_REGISTRY_VALUE_TYPE}`]: [
     { name: RELATION_VALUES, type: REL_BUILT_IN }
-  ]
+  ],
 };
 
 export const checkStixCoreRelationshipMapping = (fromType: string, toType: string, relationshipType: string): boolean => {
