@@ -584,6 +584,10 @@ input StatusAddInput {
   template_id: String!
   order: Int!
 }
+input StatusTemplateAddInput {
+  name: String!
+  color: String!
+}
 
 ############## Sync
 enum SynchronizersOrdering {
@@ -6390,6 +6394,7 @@ type StixFile implements BasicObject & StixObject & StixCoreObject & StixCyberOb
   mtime: DateTime
   atime: DateTime
   x_opencti_additional_names: [String]
+  obsContent: Artifact
   # Technical
   creator: User
   toStix: String
@@ -6411,6 +6416,7 @@ input StixFileAddInput {
   mtime: DateTime
   atime: DateTime
   x_opencti_additional_names: [String]
+  obsContent: ID
 }
 type X509Certificate implements BasicObject & StixObject & StixCoreObject & StixCyberObservable & HashedObservable {
   id: ID! # internal_id
@@ -10531,6 +10537,9 @@ type Mutation {
   otpLogin(input: UserOTPLoginInput): Boolean @auth
   settingsEdit(id: ID!): SettingsEditMutations @auth(for: [SETTINGS])
   subTypeEdit(id: ID!): SubTypeEditMutations @auth(for: [SETTINGS])
+  statusTemplateAdd(input: StatusTemplateAddInput!): StatusTemplate! @auth(for: [SETTINGS])
+  statusTemplateDelete(id: ID!): ID! @auth(for: [SETTINGS])
+  statusTemplateFieldPatch(id: ID!, input: [EditInput!]!): StatusTemplate! @auth(for: [SETTINGS])
   groupAdd(input: GroupAddInput): Group @auth(for: [SETTINGS_SETACCESSES])
   groupEdit(id: ID!): GroupEditMutations @auth(for: [SETTINGS_SETACCESSES])
   userAdd(input: UserAddInput): User @auth(for: [SETTINGS_SETACCESSES])

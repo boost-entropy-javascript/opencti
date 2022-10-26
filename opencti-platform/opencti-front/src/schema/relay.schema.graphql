@@ -602,6 +602,11 @@ input StatusAddInput {
   order: Int!
 }
 
+input StatusTemplateAddInput {
+  name: String!
+  color: String!
+}
+
 enum SynchronizersOrdering {
   id
   name
@@ -5223,6 +5228,7 @@ type StixFile implements BasicObject & StixObject & StixCoreObject & StixCyberOb
   mtime: DateTime
   atime: DateTime
   x_opencti_additional_names: [String]
+  obsContent: Artifact
   creator: User
   toStix: String
   importFiles(first: Int): FileConnection
@@ -5244,6 +5250,7 @@ input StixFileAddInput {
   mtime: DateTime
   atime: DateTime
   x_opencti_additional_names: [String]
+  obsContent: ID
 }
 
 type X509Certificate implements BasicObject & StixObject & StixCoreObject & StixCyberObservable & HashedObservable {
@@ -7425,6 +7432,9 @@ type Mutation {
   otpLogin(input: UserOTPLoginInput): Boolean
   settingsEdit(id: ID!): SettingsEditMutations
   subTypeEdit(id: ID!): SubTypeEditMutations
+  statusTemplateAdd(input: StatusTemplateAddInput!): StatusTemplate!
+  statusTemplateDelete(id: ID!): ID!
+  statusTemplateFieldPatch(id: ID!, input: [EditInput!]!): StatusTemplate!
   groupAdd(input: GroupAddInput): Group
   groupEdit(id: ID!): GroupEditMutations
   userAdd(input: UserAddInput): User

@@ -7237,6 +7237,9 @@ export type Mutation = {
   sectorEdit?: Maybe<SectorEditMutations>;
   sessionKill?: Maybe<Scalars['ID']>;
   settingsEdit?: Maybe<SettingsEditMutations>;
+  statusTemplateAdd: StatusTemplate;
+  statusTemplateDelete: Scalars['ID'];
+  statusTemplateFieldPatch: StatusTemplate;
   stixCoreObjectEdit?: Maybe<StixCoreObjectEditMutations>;
   stixCoreRelationshipAdd?: Maybe<StixCoreRelationship>;
   stixCoreRelationshipDelete: Scalars['Boolean'];
@@ -7881,6 +7884,22 @@ export type MutationSessionKillArgs = {
 
 export type MutationSettingsEditArgs = {
   id: Scalars['ID'];
+};
+
+
+export type MutationStatusTemplateAddArgs = {
+  input: StatusTemplateAddInput;
+};
+
+
+export type MutationStatusTemplateDeleteArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type MutationStatusTemplateFieldPatchArgs = {
+  id: Scalars['ID'];
+  input: Array<EditInput>;
 };
 
 
@@ -13304,6 +13323,11 @@ export type StatusTemplate = {
   name: Scalars['String'];
 };
 
+export type StatusTemplateAddInput = {
+  color: Scalars['String'];
+  name: Scalars['String'];
+};
+
 export type StatusTemplateConnection = {
   __typename?: 'StatusTemplateConnection';
   edges?: Maybe<Array<Maybe<StatusTemplateEdge>>>;
@@ -14409,6 +14433,7 @@ export type StixFile = BasicObject & HashedObservable & StixCoreObject & StixCyb
   notes?: Maybe<NoteConnection>;
   objectLabel?: Maybe<LabelConnection>;
   objectMarking?: Maybe<MarkingDefinitionConnection>;
+  obsContent?: Maybe<Artifact>;
   observable_value: Scalars['String'];
   observedData?: Maybe<ObservedDataConnection>;
   opinions?: Maybe<OpinionConnection>;
@@ -14543,6 +14568,7 @@ export type StixFileAddInput = {
   mtime?: InputMaybe<Scalars['DateTime']>;
   name?: InputMaybe<Scalars['String']>;
   name_enc?: InputMaybe<Scalars['String']>;
+  obsContent?: InputMaybe<Scalars['ID']>;
   size?: InputMaybe<Scalars['Int']>;
   x_opencti_additional_names?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
 };
@@ -18202,6 +18228,7 @@ export type ResolversTypes = ResolversObject<{
   StatusFilter: StatusFilter;
   StatusOrdering: StatusOrdering;
   StatusTemplate: ResolverTypeWrapper<StatusTemplate>;
+  StatusTemplateAddInput: StatusTemplateAddInput;
   StatusTemplateConnection: ResolverTypeWrapper<StatusTemplateConnection>;
   StatusTemplateEdge: ResolverTypeWrapper<StatusTemplateEdge>;
   StatusTemplateOrdering: StatusTemplateOrdering;
@@ -18733,6 +18760,7 @@ export type ResolversParentTypes = ResolversObject<{
   StatusConnection: StatusConnection;
   StatusEdge: StatusEdge;
   StatusTemplate: StatusTemplate;
+  StatusTemplateAddInput: StatusTemplateAddInput;
   StatusTemplateConnection: StatusTemplateConnection;
   StatusTemplateEdge: StatusTemplateEdge;
   StatusesFiltering: StatusesFiltering;
@@ -21388,6 +21416,9 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   sectorEdit?: Resolver<Maybe<ResolversTypes['SectorEditMutations']>, ParentType, ContextType, RequireFields<MutationSectorEditArgs, 'id'>>;
   sessionKill?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType, RequireFields<MutationSessionKillArgs, 'id'>>;
   settingsEdit?: Resolver<Maybe<ResolversTypes['SettingsEditMutations']>, ParentType, ContextType, RequireFields<MutationSettingsEditArgs, 'id'>>;
+  statusTemplateAdd?: Resolver<ResolversTypes['StatusTemplate'], ParentType, ContextType, RequireFields<MutationStatusTemplateAddArgs, 'input'>>;
+  statusTemplateDelete?: Resolver<ResolversTypes['ID'], ParentType, ContextType, RequireFields<MutationStatusTemplateDeleteArgs, 'id'>>;
+  statusTemplateFieldPatch?: Resolver<ResolversTypes['StatusTemplate'], ParentType, ContextType, RequireFields<MutationStatusTemplateFieldPatchArgs, 'id' | 'input'>>;
   stixCoreObjectEdit?: Resolver<Maybe<ResolversTypes['StixCoreObjectEditMutations']>, ParentType, ContextType, RequireFields<MutationStixCoreObjectEditArgs, 'id'>>;
   stixCoreRelationshipAdd?: Resolver<Maybe<ResolversTypes['StixCoreRelationship']>, ParentType, ContextType, Partial<MutationStixCoreRelationshipAddArgs>>;
   stixCoreRelationshipDelete?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationStixCoreRelationshipDeleteArgs, 'fromId' | 'relationship_type' | 'toId'>>;
@@ -23128,6 +23159,7 @@ export type StixFileResolvers<ContextType = any, ParentType extends ResolversPar
   notes?: Resolver<Maybe<ResolversTypes['NoteConnection']>, ParentType, ContextType, Partial<StixFileNotesArgs>>;
   objectLabel?: Resolver<Maybe<ResolversTypes['LabelConnection']>, ParentType, ContextType>;
   objectMarking?: Resolver<Maybe<ResolversTypes['MarkingDefinitionConnection']>, ParentType, ContextType>;
+  obsContent?: Resolver<Maybe<ResolversTypes['Artifact']>, ParentType, ContextType>;
   observable_value?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   observedData?: Resolver<Maybe<ResolversTypes['ObservedDataConnection']>, ParentType, ContextType, Partial<StixFileObservedDataArgs>>;
   opinions?: Resolver<Maybe<ResolversTypes['OpinionConnection']>, ParentType, ContextType, Partial<StixFileOpinionsArgs>>;
