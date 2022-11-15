@@ -72,8 +72,8 @@ export const findAll = async (context, user, args) => {
 
 // region by elastic
 export const stixCyberObservablesNumber = (context, user, args) => ({
-  count: elCount(user, READ_INDEX_STIX_CYBER_OBSERVABLES, args),
-  total: elCount(user, READ_INDEX_STIX_CYBER_OBSERVABLES, dissoc('endDate', args)),
+  count: elCount(context, user, READ_INDEX_STIX_CYBER_OBSERVABLES, args),
+  total: elCount(context, user, READ_INDEX_STIX_CYBER_OBSERVABLES, dissoc('endDate', args)),
 });
 // endregion
 
@@ -349,6 +349,7 @@ export const stixCyberObservablesExportAsk = async (context, user, args) => {
   const ordersOpts = stixCyberObservableOptions.StixCyberObservablesOrdering;
   const listParams = exportTransformFilters(argsFilters, filtersOpts, ordersOpts);
   const works = await askListExport(
+    context,
     user,
     format,
     'Stix-Cyber-Observable',
