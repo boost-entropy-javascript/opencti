@@ -1,27 +1,31 @@
-import React, { Component } from 'react';
-import * as PropTypes from 'prop-types';
-import { Formik, Form, Field } from 'formik';
-import withStyles from '@mui/styles/withStyles';
+import React, { FunctionComponent, useState } from 'react';
+import { Field, Form, Formik } from 'formik';
 import Drawer from '@mui/material/Drawer';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Fab from '@mui/material/Fab';
 import { Add, Close } from '@mui/icons-material';
-import { compose } from 'ramda';
 import * as Yup from 'yup';
 import { graphql } from 'react-relay';
-import { ConnectionHandler } from 'relay-runtime';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import makeStyles from '@mui/styles/makeStyles';
+import { FormikConfig } from 'formik/dist/types';
+import { Store } from 'relay-runtime';
 import TextField from '../../../../components/TextField';
 import ColorPickerField from '../../../../components/ColorPickerField';
 import { commitMutation } from '../../../../relay/environment';
-import inject18n from '../../../../components/i18n';
+import { useFormatter } from '../../../../components/i18n';
+import { insertNode } from '../../../../utils/Store';
+import { Theme } from '../../../../components/Theme';
+import {
+  StatusTemplateCreationContextualMutation$data,
+} from './__generated__/StatusTemplateCreationContextualMutation.graphql';
 
-const styles = (theme) => ({
+const useStyles = makeStyles<Theme>((theme) => ({
   drawerPaper: {
     minHeight: '100vh',
     width: '50%',
@@ -65,105 +69,106 @@ const styles = (theme) => ({
   dialog: {
     overflow: 'hidden',
   },
-});
+}));
 
-const labelMutation = graphql`
-  mutation LabelCreationMutation($input: LabelAddInput!) {
-    labelAdd(input: $input) {
-      ...LabelLine_node
+const statusTemplateMutation = graphql`
+  mutation StatusTemplateCreationMutation($input: StatusTemplateAddInput!) {
+    statusTemplateAdd(input: $input) {
+      ...StatusTemplateLine_node
     }
   }
 `;
 
-const labelContextualMutation = graphql`
-  mutation LabelCreationContextualMutation($input: LabelAddInput!) {
-    labelAdd(input: $input) {
-      id
-      value
+const statusTemplateContextualMutation = graphql`
+  mutation StatusTemplateCreationContextualMutation($input: StatusTemplateAddInput!) {
+    statusTemplateAdd(input: $input) {
+        id
+        name
     }
   }
 `;
 
-const labelValidation = (t) => Yup.object().shape({
-  value: Yup.string().required(t('This field is required')),
+const statusTemplateValidation = (t: (name: string | object) => string) => Yup.object().shape({
+  name: Yup.string().required(t('This field is required')),
   color: Yup.string().required(t('This field is required')),
 });
 
-const sharedUpdater = (store, userId, paginationOptions, newEdge) => {
-  const userProxy = store.get(userId);
-  const conn = ConnectionHandler.getConnection(
-    userProxy,
-    'Pagination_labels',
-    paginationOptions,
-  );
-  ConnectionHandler.insertEdgeBefore(conn, newEdge);
-};
+interface StatusTemplateCreationProps {
+  contextual: boolean,
+  inputValueContextual: string,
+  creationCallback: (data: StatusTemplateCreationContextualMutation$data) => void,
+  handleCloseContextual: () => void,
+  openContextual: boolean,
+  paginationOptions?: { search: string, orderMode: string, orderBy: string },
+}
 
-class LabelCreation extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { open: false, labels: [] };
-  }
+const StatusTemplateCreation: FunctionComponent<StatusTemplateCreationProps> = ({
+  contextual,
+  inputValueContextual,
+  creationCallback,
+  handleCloseContextual,
+  openContextual,
+  paginationOptions,
+}) => {
+  const classes = useStyles();
+  const { t } = useFormatter();
 
-  handleOpen() {
-    this.setState({ open: true });
-  }
+  const [open, setOpen] = useState(false);
 
-  handleClose() {
-    this.setState({ open: false });
-  }
+  const handleOpen = () => {
+    setOpen(true);
+  };
 
-  onSubmit(values, { setSubmitting, resetForm }) {
-    if (this.props.dryrun && this.props.contextual) {
-      this.props.creationCallback({ labelAdd: values });
-      return this.props.handleClose();
-    }
-    return commitMutation({
-      mutation: this.props.contextual ? labelContextualMutation : labelMutation,
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const onSubmit: FormikConfig<{ name: string, color: string }>['onSubmit'] = (values, { setSubmitting, resetForm }) => {
+    commitMutation({
+      mutation: contextual ? statusTemplateContextualMutation : statusTemplateMutation,
       variables: {
         input: values,
       },
-      updater: (store) => {
-        if (!this.props.contextual) {
-          const payload = store.getRootField('labelAdd');
-          const newEdge = payload.setLinkedRecord(payload, 'node');
-          const container = store.getRoot();
-          sharedUpdater(
+      setSubmitting,
+      updater: (store: Store) => {
+        if (!contextual) {
+          insertNode(
             store,
-            container.getDataID(),
-            this.props.paginationOptions,
-            newEdge,
+            'Pagination_statusTemplates',
+            paginationOptions,
+            'statusTemplateAdd',
           );
         }
       },
-      setSubmitting,
-      onCompleted: (response) => {
+      onCompleted: (response: StatusTemplateCreationContextualMutation$data) => {
         setSubmitting(false);
         resetForm();
-        if (this.props.contextual) {
-          this.props.creationCallback(response);
-          this.props.handleClose();
+        if (contextual) {
+          creationCallback(response);
+          handleCloseContextual();
         } else {
-          this.handleClose();
+          handleClose();
         }
       },
+      optimisticUpdater: undefined,
+      optimisticResponse: undefined,
+      onError: undefined,
     });
-  }
+  };
 
-  onResetClassic() {
-    this.handleClose();
-  }
+  const onResetClassic = () => {
+    handleClose();
+  };
 
-  onResetContextual() {
-    this.props.handleClose();
-  }
+  const onResetContextual = () => {
+    handleCloseContextual();
+  };
 
-  renderClassic() {
-    const { t, classes } = this.props;
+  const renderClassic = () => {
     return (
       <div>
         <Fab
-          onClick={this.handleOpen.bind(this)}
+          onClick={handleOpen}
           color="secondary"
           aria-label="Add"
           className={classes.createButton}
@@ -171,42 +176,42 @@ class LabelCreation extends Component {
           <Add />
         </Fab>
         <Drawer
-          open={this.state.open}
+          open={open}
           anchor="right"
           sx={{ zIndex: 1202 }}
           elevation={1}
           classes={{ paper: classes.drawerPaper }}
-          onClose={this.handleClose.bind(this)}
+          onClose={handleClose}
         >
           <div className={classes.header}>
             <IconButton
               aria-label="Close"
               className={classes.closeButton}
-              onClick={this.handleClose.bind(this)}
+              onClick={handleClose}
               size="large"
               color="primary"
             >
               <Close fontSize="small" color="primary" />
             </IconButton>
-            <Typography variant="h6">{t('Create a label')}</Typography>
+            <Typography variant="h6">{t('Create a status template')}</Typography>
           </div>
           <div className={classes.container}>
             <Formik
               initialValues={{
-                value: '',
+                name: '',
                 color: '',
               }}
-              validationSchema={labelValidation(t)}
-              onSubmit={this.onSubmit.bind(this)}
-              onReset={this.onResetClassic.bind(this)}
+              validationSchema={statusTemplateValidation(t)}
+              onSubmit={onSubmit}
+              onReset={onResetClassic}
             >
               {({ submitForm, handleReset, isSubmitting }) => (
                 <Form style={{ margin: '20px 0 20px 0' }}>
                   <Field
                     component={TextField}
                     variant="standard"
-                    name="value"
-                    label={t('Value')}
+                    name="name"
+                    label={t('Name')}
                     fullWidth={true}
                   />
                   <Field
@@ -242,37 +247,36 @@ class LabelCreation extends Component {
         </Drawer>
       </div>
     );
-  }
+  };
 
-  renderContextual() {
-    const { t, classes, open, inputValue, handleClose } = this.props;
+  const renderContextual = () => {
     return (
       <div>
         <Formik
           enableReinitialize={true}
           initialValues={{
-            value: inputValue,
+            name: inputValueContextual,
             color: '',
           }}
-          validationSchema={labelValidation(t)}
-          onSubmit={this.onSubmit.bind(this)}
-          onReset={this.onResetContextual.bind(this)}
+          validationSchema={statusTemplateValidation(t)}
+          onSubmit={onSubmit}
+          onReset={onResetContextual}
         >
           {({ submitForm, handleReset, isSubmitting }) => (
             <Form>
               <Dialog
-                open={open}
+                open={openContextual}
                 PaperProps={{ elevation: 1 }}
-                onClose={handleClose.bind(this)}
+                onClose={handleCloseContextual}
                 fullWidth={true}
               >
-                <DialogTitle>{t('Create a label')}</DialogTitle>
+                <DialogTitle>{t('Create a status template')}</DialogTitle>
                 <DialogContent classes={{ root: classes.dialog }}>
                   <Field
                     component={TextField}
                     variant="standard"
-                    name="value"
-                    label={t('Value')}
+                    name="name"
+                    label={t('Name')}
                     fullWidth={true}
                   />
                   <Field
@@ -301,30 +305,11 @@ class LabelCreation extends Component {
         </Formik>
       </div>
     );
-  }
+  };
 
-  render() {
-    const { contextual } = this.props;
-    if (contextual) {
-      return this.renderContextual();
-    }
-    return this.renderClassic();
-  }
-}
-
-LabelCreation.propTypes = {
-  paginationOptions: PropTypes.object,
-  classes: PropTypes.object,
-  theme: PropTypes.object,
-  t: PropTypes.func,
-  contextual: PropTypes.bool,
-  open: PropTypes.bool,
-  handleClose: PropTypes.func,
-  inputValue: PropTypes.string,
-  creationCallback: PropTypes.func,
+  return (
+    contextual ? renderContextual() : renderClassic()
+  );
 };
 
-export default compose(
-  inject18n,
-  withStyles(styles, { withTheme: true }),
-)(LabelCreation);
+export default StatusTemplateCreation;

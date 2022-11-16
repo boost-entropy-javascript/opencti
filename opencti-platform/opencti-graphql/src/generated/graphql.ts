@@ -391,6 +391,7 @@ export type AttackPatternAddInput = {
   name: Scalars['String'];
   objectLabel?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   objectMarking?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  objectOrganization?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   revoked?: InputMaybe<Scalars['Boolean']>;
   stix_id?: InputMaybe<Scalars['StixId']>;
   update?: InputMaybe<Scalars['Boolean']>;
@@ -2162,6 +2163,7 @@ export type CourseOfActionAddInput = {
   name: Scalars['String'];
   objectLabel?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   objectMarking?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  objectOrganization?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   revoked?: InputMaybe<Scalars['Boolean']>;
   stix_id?: InputMaybe<Scalars['StixId']>;
   update?: InputMaybe<Scalars['Boolean']>;
@@ -3878,11 +3880,13 @@ export type FileEdge = {
 export type FileMetadata = {
   __typename?: 'FileMetadata';
   creator?: Maybe<User>;
+  creator_id?: Maybe<Scalars['String']>;
   encoding?: Maybe<Scalars['String']>;
   entity?: Maybe<StixCoreObject>;
   entity_id?: Maybe<Scalars['String']>;
   errors?: Maybe<Array<Maybe<WorkMessage>>>;
   labels?: Maybe<Array<Maybe<Scalars['String']>>>;
+  labels_text?: Maybe<Scalars['String']>;
   list_filters?: Maybe<Scalars['String']>;
   messages?: Maybe<Array<Maybe<WorkMessage>>>;
   mimetype?: Maybe<Scalars['String']>;
@@ -7789,6 +7793,8 @@ export type Mutation = {
   sessionKill?: Maybe<Scalars['ID']>;
   settingsEdit?: Maybe<SettingsEditMutations>;
   statusTemplateAdd: StatusTemplate;
+  statusTemplateContextClean: StatusTemplate;
+  statusTemplateContextPatch: StatusTemplate;
   statusTemplateDelete: Scalars['ID'];
   statusTemplateFieldPatch: StatusTemplate;
   stixCoreObjectEdit?: Maybe<StixCoreObjectEditMutations>;
@@ -8485,6 +8491,17 @@ export type MutationSettingsEditArgs = {
 
 export type MutationStatusTemplateAddArgs = {
   input: StatusTemplateAddInput;
+};
+
+
+export type MutationStatusTemplateContextCleanArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type MutationStatusTemplateContextPatchArgs = {
+  id: Scalars['ID'];
+  input: EditContext;
 };
 
 
@@ -12310,6 +12327,7 @@ export type QueryStatusTemplatesArgs = {
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<StatusTemplateOrdering>;
   orderMode?: InputMaybe<OrderingMode>;
+  search?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -14193,6 +14211,7 @@ export enum StatusOrdering {
 export type StatusTemplate = {
   __typename?: 'StatusTemplate';
   color: Scalars['String'];
+  editContext?: Maybe<Array<Maybe<EditUserContext>>>;
   id: Scalars['ID'];
   name: Scalars['String'];
 };
@@ -16085,6 +16104,7 @@ export type Subscription = {
   label?: Maybe<Label>;
   markingDefinition?: Maybe<MarkingDefinition>;
   settings?: Maybe<Settings>;
+  statusTemplate?: Maybe<StatusTemplate>;
   stixCoreObject?: Maybe<StixCoreObject>;
   stixCoreRelationship?: Maybe<StixCoreRelationship>;
   stixCyberObservable?: Maybe<StixCyberObservable>;
@@ -16122,6 +16142,11 @@ export type SubscriptionMarkingDefinitionArgs = {
 
 
 export type SubscriptionSettingsArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type SubscriptionStatusTemplateArgs = {
   id: Scalars['ID'];
 };
 
@@ -21435,11 +21460,13 @@ export type FileEdgeResolvers<ContextType = any, ParentType extends ResolversPar
 
 export type FileMetadataResolvers<ContextType = any, ParentType extends ResolversParentTypes['FileMetadata'] = ResolversParentTypes['FileMetadata']> = ResolversObject<{
   creator?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  creator_id?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   encoding?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   entity?: Resolver<Maybe<ResolversTypes['StixCoreObject']>, ParentType, ContextType>;
   entity_id?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   errors?: Resolver<Maybe<Array<Maybe<ResolversTypes['WorkMessage']>>>, ParentType, ContextType>;
   labels?: Resolver<Maybe<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
+  labels_text?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   list_filters?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['WorkMessage']>>>, ParentType, ContextType>;
   mimetype?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -22797,6 +22824,8 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   sessionKill?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType, RequireFields<MutationSessionKillArgs, 'id'>>;
   settingsEdit?: Resolver<Maybe<ResolversTypes['SettingsEditMutations']>, ParentType, ContextType, RequireFields<MutationSettingsEditArgs, 'id'>>;
   statusTemplateAdd?: Resolver<ResolversTypes['StatusTemplate'], ParentType, ContextType, RequireFields<MutationStatusTemplateAddArgs, 'input'>>;
+  statusTemplateContextClean?: Resolver<ResolversTypes['StatusTemplate'], ParentType, ContextType, RequireFields<MutationStatusTemplateContextCleanArgs, 'id'>>;
+  statusTemplateContextPatch?: Resolver<ResolversTypes['StatusTemplate'], ParentType, ContextType, RequireFields<MutationStatusTemplateContextPatchArgs, 'id' | 'input'>>;
   statusTemplateDelete?: Resolver<ResolversTypes['ID'], ParentType, ContextType, RequireFields<MutationStatusTemplateDeleteArgs, 'id'>>;
   statusTemplateFieldPatch?: Resolver<ResolversTypes['StatusTemplate'], ParentType, ContextType, RequireFields<MutationStatusTemplateFieldPatchArgs, 'id' | 'input'>>;
   stixCoreObjectEdit?: Resolver<Maybe<ResolversTypes['StixCoreObjectEditMutations']>, ParentType, ContextType, RequireFields<MutationStixCoreObjectEditArgs, 'id'>>;
@@ -24255,6 +24284,7 @@ export type StatusEdgeResolvers<ContextType = any, ParentType extends ResolversP
 
 export type StatusTemplateResolvers<ContextType = any, ParentType extends ResolversParentTypes['StatusTemplate'] = ResolversParentTypes['StatusTemplate']> = ResolversObject<{
   color?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  editContext?: Resolver<Maybe<Array<Maybe<ResolversTypes['EditUserContext']>>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -24908,6 +24938,7 @@ export type SubscriptionResolvers<ContextType = any, ParentType extends Resolver
   label?: SubscriptionResolver<Maybe<ResolversTypes['Label']>, "label", ParentType, ContextType, RequireFields<SubscriptionLabelArgs, 'id'>>;
   markingDefinition?: SubscriptionResolver<Maybe<ResolversTypes['MarkingDefinition']>, "markingDefinition", ParentType, ContextType, RequireFields<SubscriptionMarkingDefinitionArgs, 'id'>>;
   settings?: SubscriptionResolver<Maybe<ResolversTypes['Settings']>, "settings", ParentType, ContextType, RequireFields<SubscriptionSettingsArgs, 'id'>>;
+  statusTemplate?: SubscriptionResolver<Maybe<ResolversTypes['StatusTemplate']>, "statusTemplate", ParentType, ContextType, RequireFields<SubscriptionStatusTemplateArgs, 'id'>>;
   stixCoreObject?: SubscriptionResolver<Maybe<ResolversTypes['StixCoreObject']>, "stixCoreObject", ParentType, ContextType, RequireFields<SubscriptionStixCoreObjectArgs, 'id'>>;
   stixCoreRelationship?: SubscriptionResolver<Maybe<ResolversTypes['StixCoreRelationship']>, "stixCoreRelationship", ParentType, ContextType, RequireFields<SubscriptionStixCoreRelationshipArgs, 'id'>>;
   stixCyberObservable?: SubscriptionResolver<Maybe<ResolversTypes['StixCyberObservable']>, "stixCyberObservable", ParentType, ContextType, RequireFields<SubscriptionStixCyberObservableArgs, 'id'>>;
