@@ -5453,15 +5453,15 @@ export type IndicatorAddInput = {
   created?: InputMaybe<Scalars['DateTime']>;
   createdBy?: InputMaybe<Scalars['String']>;
   description?: InputMaybe<Scalars['String']>;
-  externalReferences?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  indicator_types?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  killChainPhases?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  externalReferences?: InputMaybe<Array<Scalars['String']>>;
+  indicator_types?: InputMaybe<Array<Scalars['String']>>;
+  killChainPhases?: InputMaybe<Array<Scalars['String']>>;
   lang?: InputMaybe<Scalars['String']>;
   modified?: InputMaybe<Scalars['DateTime']>;
   name: Scalars['String'];
-  objectLabel?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  objectMarking?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  objectOrganization?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  objectLabel?: InputMaybe<Array<Scalars['String']>>;
+  objectMarking?: InputMaybe<Array<Scalars['String']>>;
+  objectOrganization?: InputMaybe<Array<Scalars['String']>>;
   pattern: Scalars['String'];
   pattern_type: Scalars['String'];
   pattern_version?: InputMaybe<Scalars['String']>;
@@ -5470,11 +5470,11 @@ export type IndicatorAddInput = {
   update?: InputMaybe<Scalars['Boolean']>;
   valid_from?: InputMaybe<Scalars['DateTime']>;
   valid_until?: InputMaybe<Scalars['DateTime']>;
-  x_mitre_platforms?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  x_mitre_platforms?: InputMaybe<Array<Scalars['String']>>;
   x_opencti_detection?: InputMaybe<Scalars['Boolean']>;
   x_opencti_main_observable_type?: InputMaybe<Scalars['String']>;
   x_opencti_score?: InputMaybe<Scalars['Int']>;
-  x_opencti_stix_ids?: InputMaybe<Array<InputMaybe<Scalars['StixId']>>>;
+  x_opencti_stix_ids?: InputMaybe<Array<Scalars['StixId']>>;
 };
 
 export type IndicatorConnection = {
@@ -5528,6 +5528,7 @@ export enum IndicatorsFilter {
   CreatedBy = 'createdBy',
   CreatedAt = 'created_at',
   Indicates = 'indicates',
+  IndicatorTypes = 'indicator_types',
   LabelledBy = 'labelledBy',
   MarkedBy = 'markedBy',
   Modified = 'modified',
@@ -14453,6 +14454,7 @@ export enum StixCoreObjectsFilter {
   EntityType = 'entity_type',
   HasExternalReference = 'hasExternalReference',
   Indicates = 'indicates',
+  IndicatorTypes = 'indicator_types',
   LabelledBy = 'labelledBy',
   MarkedBy = 'markedBy',
   Modified = 'modified',
@@ -15345,6 +15347,7 @@ export enum StixDomainObjectsFilter {
   EntityType = 'entity_type',
   HasExternalReference = 'hasExternalReference',
   Indicates = 'indicates',
+  IndicatorTypes = 'indicator_types',
   LabelledBy = 'labelledBy',
   MarkedBy = 'markedBy',
   Modified = 'modified',
