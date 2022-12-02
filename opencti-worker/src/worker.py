@@ -70,7 +70,7 @@ bundles_bad_gateway_error_counter = meter.create_counter(
 )
 bundles_processing_time_gauge = meter.create_histogram(
     name="opencti_bundles_processing_time_gauge",
-    description="number of bundles in bad gateway error",
+    description="processing time of bundles",
 )
 
 
@@ -405,7 +405,7 @@ class Worker:  # pylint: disable=too-few-public-methods, too-many-instance-attri
             "WORKER_PROMETHEUS_TELEMETRY_PORT",
             ["worker", "telemetry_prometheus_port"],
             config,
-            False,
+            True,
             14270,
         )
         self.telemetry_prometheus_host = get_config_variable(
