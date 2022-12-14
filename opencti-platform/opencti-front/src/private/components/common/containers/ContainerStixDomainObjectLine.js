@@ -63,6 +63,8 @@ const ContainerStixDomainObjectLineComponent = (props) => {
     selectedElements,
     deSelectedElements,
     selectAll,
+    onToggleShiftEntity,
+    index,
   } = props;
   const classes = useStyles();
   const { t, fd } = useFormatter();
@@ -81,7 +83,10 @@ const ContainerStixDomainObjectLineComponent = (props) => {
       <ListItemIcon
         classes={{ root: classes.itemIcon }}
         style={{ minWidth: 40 }}
-        onClick={(event) => !isOnlyThroughInference && onToggleEntity(node, event)
+        onClick={(event) => !isOnlyThroughInference
+          && (event.shiftKey
+            ? onToggleShiftEntity(index, node, event)
+            : onToggleEntity(node, event))
         }
       >
         <Checkbox
@@ -194,6 +199,9 @@ export const ContainerStixDomainObjectLine = createFragmentContainer(
           name
         }
         ... on ObservedData {
+          name
+        }
+        ... on Report {
           name
         }
         ... on Grouping {

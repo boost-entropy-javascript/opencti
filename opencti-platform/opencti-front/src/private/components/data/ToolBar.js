@@ -28,6 +28,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
 import {
+  Add,
   AddOutlined,
   BrushOutlined,
   CancelOutlined,
@@ -38,8 +39,11 @@ import {
   LanguageOutlined,
   LinkOffOutlined,
   TransformOutlined,
+  ContentCopyOutlined,
+  AutoFixHighOutlined,
+  MergeOutlined,
 } from '@mui/icons-material';
-import { AutoFix, ContentCopy, CloudRefresh, Label, Merge } from 'mdi-material-ui';
+import { CloudRefresh, Label } from 'mdi-material-ui';
 import Autocomplete from '@mui/material/Autocomplete';
 import Drawer from '@mui/material/Drawer';
 import Dialog from '@mui/material/Dialog';
@@ -67,11 +71,15 @@ import { defaultValue } from '../../../utils/Graph';
 import { identitySearchIdentitiesSearchQuery } from '../common/identities/IdentitySearch';
 import { labelsSearchQuery } from '../settings/LabelsQuery';
 import Security from '../../../utils/Security';
-import { KNOWLEDGE_KNUPDATE, KNOWLEDGE_KNUPDATE_KNDELETE } from '../../../utils/hooks/useGranted';
+import {
+  KNOWLEDGE_KNUPDATE,
+  KNOWLEDGE_KNUPDATE_KNDELETE,
+} from '../../../utils/hooks/useGranted';
 import { UserContext } from '../../../utils/hooks/useAuth';
 import { statusFieldStatusesSearchQuery } from '../common/form/StatusField';
 import { hexToRGB } from '../../../utils/Colors';
 import { externalReferencesSearchQuery } from '../analysis/ExternalReferences';
+import StixDomainObjectCreation from '../common/stix_domain_objects/StixDomainObjectCreation';
 
 const styles = (theme) => ({
   bottomNav: {
@@ -236,6 +244,30 @@ const toolBarConnectorsQuery = graphql`
 
 const maxNumberOfObservablesToCopy = 1000;
 
+const toolBarContainersQuery = graphql`
+  query ToolBarContainersQuery($search: String) {
+    containers(search: $search, filters: [
+      { key: entity_type, values: ["Report", "Grouping"] }
+    ]) {
+      edges {
+        node {
+          id
+          entity_type
+          ... on Report {
+            name
+          }
+          ... on Grouping {
+            name
+          }
+          ... on ObservedData {
+            name
+          }
+        }
+      }
+    }
+  }
+`;
+
 class ToolBar extends Component {
   constructor(props) {
     super(props);
@@ -246,6 +278,7 @@ class ToolBar extends Component {
       displayRescan: false,
       displayMerge: false,
       displayPromote: false,
+      containerCreation: false,
       actions: [],
       actionsInputs: [{}],
       keptEntityId: null,
@@ -254,6 +287,7 @@ class ToolBar extends Component {
       markingDefinitions: [],
       labels: [],
       identities: [],
+      containers: [],
       statuses: [],
       externalReferences: [],
       enrichConnectors: [],
@@ -426,16 +460,7 @@ class ToolBar extends Component {
   }
 
   handleLaunchRemove() {
-    const actions = [
-      {
-        type: 'REMOVE',
-        context: {
-          type: 'REVERSED_RELATION',
-          field: 'object',
-          values: [this.props.container],
-        },
-      },
-    ];
+    const actions = [{ type: 'REMOVE', context: { field: 'container-object', values: [this.props.container] } }];
     this.setState({ actions }, () => {
       this.handleOpenTask();
     });
@@ -509,7 +534,11 @@ class ToolBar extends Component {
   titleCopy() {
     const { t } = this.props;
     if (this.props.numberOfSelectedElements > maxNumberOfObservablesToCopy) {
-      return `${t('Copy disabled: too many selected elements (maximum number of elements for a copy: ') + maxNumberOfObservablesToCopy})`;
+      return `${
+        t(
+          'Copy disabled: too many selected elements (maximum number of elements for a copy: ',
+        ) + maxNumberOfObservablesToCopy
+      })`;
     }
     return t('Copy');
   }
@@ -602,56 +631,27 @@ class ToolBar extends Component {
     if (actionsInputs[i]?.type === 'ADD') {
       options = [
         { label: t('Marking definitions'), value: 'object-marking' },
-        {
-          label: t('Labels'),
-          value: 'object-label',
-        },
-        {
-          label: t('External references'),
-          value: 'external-reference',
-        },
+        { label: t('Labels'), value: 'object-label' },
+        { label: t('External references'), value: 'external-reference' },
+        { label: t('In containers'), value: 'container-object' },
       ];
     } else if (actionsInputs[i]?.type === 'REPLACE') {
       options = [
         { label: t('Marking definitions'), value: 'object-marking' },
-        {
-          label: t('Labels'),
-          value: 'object-label',
-        },
-        {
-          label: t('Author'),
-          value: 'created-by',
-        },
-        {
-          label: t('Score'),
-          value: 'x_opencti_score',
-        },
-        {
-          label: t('Confidence'),
-          value: 'confidence',
-        },
-        {
-          label: t('filter_creator'),
-          value: 'creator_id',
-        },
+        { label: t('Labels'), value: 'object-label' },
+        { label: t('Author'), value: 'created-by' },
+        { label: t('Score'), value: 'x_opencti_score' },
+        { label: t('Confidence'), value: 'confidence' },
+        { label: t('filter_creator'), value: 'creator_id' },
       ];
       if (this.props.type) {
-        options.push({
-          label: t('Status'),
-          value: 'x_opencti_workflow_id',
-        });
+        options.push({ label: t('Status'), value: 'x_opencti_workflow_id' });
       }
     } else if (actionsInputs[i]?.type === 'REMOVE') {
       options = [
         { label: t('Marking definitions'), value: 'object-marking' },
-        {
-          label: t('Labels'),
-          value: 'object-label',
-        },
-        {
-          label: t('External references'),
-          value: 'external-reference',
-        },
+        { label: t('Labels'), value: 'object-label' },
+        { label: t('External references'), value: 'external-reference' },
       ];
     }
     return (
@@ -675,6 +675,26 @@ class ToolBar extends Component {
         )}
       </Select>
     );
+  }
+
+  searchContainers(i, event, newValue) {
+    if (!event) return;
+    const { actionsInputs } = this.state;
+    actionsInputs[i] = R.assoc(
+      'inputValue',
+      newValue && newValue.length > 0 ? newValue : '',
+      actionsInputs[i],
+    );
+    this.setState({ actionsInputs });
+    fetchQuery(toolBarContainersQuery, {
+      search: newValue && newValue.length > 0 ? newValue : '',
+    })
+      .toPromise()
+      .then((data) => {
+        const elements = data.containers.edges.map((e) => e.node);
+        const containers = elements.map((n) => ({ label: n.name, type: n.entity_type, value: n.id }));
+        this.setState({ containers });
+      });
   }
 
   searchMarkingDefinitions(i, event, newValue) {
@@ -827,6 +847,64 @@ class ToolBar extends Component {
     const { actionsInputs } = this.state;
     const disabled = R.isNil(actionsInputs[i]?.field) || R.isEmpty(actionsInputs[i]?.field);
     switch (actionsInputs[i]?.field) {
+      case 'container-object':
+        return <>
+          <StixDomainObjectCreation
+            inputValue={actionsInputs[i]?.inputValue || ''}
+            open={this.state.containerCreation}
+            display={true}
+            speeddial={true}
+            targetStixDomainObjectTypes={['Report', 'Grouping']}
+            handleClose={() => this.setState({ containerCreation: false })}
+            creationCallback={(data) => {
+              const element = {
+                label: data.stixDomainObjectAdd.name,
+                value: data.stixDomainObjectAdd.id,
+                type: data.stixDomainObjectAdd.entity_type,
+              };
+              this.handleChangeActionInputValues(i, null, element);
+            }}
+          />
+          <Autocomplete
+            disabled={disabled}
+            size="small"
+            fullWidth={true}
+            selectOnFocus={true}
+            autoHighlight={true}
+            getOptionLabel={(option) => (option.label ? option.label : '')}
+            value={actionsInputs[i]?.values || []}
+            multiple={true}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                variant="standard"
+                label={t('Values')}
+                fullWidth={true}
+                onFocus={this.searchContainers.bind(this, i)}
+                style={{ marginTop: 3 }}
+              />
+            )}
+            noOptionsText={t('No available options')}
+            options={this.state.containers}
+            onInputChange={this.searchContainers.bind(this, i)}
+            inputValue={actionsInputs[i]?.inputValue || ''}
+            onChange={this.handleChangeActionInputValues.bind(this, i)}
+            renderOption={(props, option) => (
+              <li {...props}>
+                <div className={classes.icon}>
+                  <ItemIcon type={option.type} />
+                </div>
+                <div className={classes.text}>{option.label}</div>
+              </li>
+            )}
+          />
+          <IconButton onClick={() => this.setState({ containerCreation: true }) }
+            edge="end"
+            style={{ position: 'absolute', top: 22, right: 48 }}
+            size="large">
+            <Add />
+          </IconButton>
+        </>;
       case 'object-marking':
         return (
           <Autocomplete
@@ -1079,6 +1157,10 @@ class ToolBar extends Component {
       theme,
       container,
       variant,
+      noAuthor,
+      noMarking,
+      noWarning,
+      deleteDisable,
     } = this.props;
     const { actions, keptEntityId, mergingElement, actionsInputs } = this.state;
     const isOpen = numberOfSelectedElements > 0;
@@ -1087,7 +1169,7 @@ class ToolBar extends Component {
     );
     const typesAreDifferent = selectedTypes.length > 1;
     // region update
-    const notUpdatableTypes = ['Label'];
+    const notUpdatableTypes = ['Label', 'Vocabulary'];
     const typesAreNotUpdatable = R.includes(
       R.uniq(
         R.map((o) => o.entity_type, R.values(selectedElements || {})),
@@ -1098,7 +1180,7 @@ class ToolBar extends Component {
         && notUpdatableTypes.includes(R.head(filters.entity_type).id));
     // endregion
     // region rules
-    const notScannableTypes = ['Label'];
+    const notScannableTypes = ['Label', 'Vocabulary'];
     const typesAreNotScannable = R.includes(
       R.uniq(
         R.map((o) => o.entity_type, R.values(selectedElements || {})),
@@ -1122,7 +1204,7 @@ class ToolBar extends Component {
     const promoteDisable = !isManualPromoteSelect && !isAllPromoteSelect;
     // endregion
     // region enrich
-    const notEnrichableTypes = ['Label'];
+    const notEnrichableTypes = ['Label', 'Vocabulary'];
     const isManualEnrichSelect = !selectAll && selectedTypes.length === 1;
     const isAllEnrichSelect = selectAll && (filters?.entity_type ?? []).length === 1;
     const enrichDisable = notEnrichableTypes.includes(R.head(selectedTypes))
@@ -1205,29 +1287,30 @@ class ToolBar extends Component {
               aria-label="clear"
               disabled={numberOfSelectedElements === 0 || this.state.processing}
               onClick={handleClearSelectedElements.bind(this)}
-              size="large"
+              size="small"
             >
               <ClearOutlined fontSize="small" />
             </IconButton>
           </Typography>
           <Security needs={[KNOWLEDGE_KNUPDATE]}>
-            <Tooltip title={t('Update')}>
+            {!typesAreNotUpdatable && (
+              <Tooltip title={t('Update')}>
               <span>
                 <IconButton
                   aria-label="update"
                   disabled={
-                    typesAreNotUpdatable
-                    || numberOfSelectedElements === 0
+                    numberOfSelectedElements === 0
                     || this.state.processing
                   }
                   onClick={this.handleOpenUpdate.bind(this)}
                   color="primary"
-                  size="large"
+                  size="small"
                 >
-                  <BrushOutlined />
+                  <BrushOutlined fontSize="small" />
                 </IconButton>
               </span>
-            </Tooltip>
+              </Tooltip>
+            )}
             <UserContext.Consumer>
               {({ helper }) => {
                 const label = helper.isRuleEngineEnable()
@@ -1237,7 +1320,7 @@ class ToolBar extends Component {
                   || !helper.isRuleEngineEnable()
                   || numberOfSelectedElements === 0
                   || this.state.processing;
-                return (
+                return typesAreNotScannable ? undefined : (
                   <Tooltip title={t(label)}>
                     <span>
                       <IconButton
@@ -1245,73 +1328,83 @@ class ToolBar extends Component {
                         disabled={buttonDisable}
                         onClick={this.handleOpenRescan.bind(this)}
                         color="primary"
-                        size="large"
+                        size="small"
                       >
-                        <AutoFix />
+                        <AutoFixHighOutlined fontSize="small" />
                       </IconButton>
                     </span>
                   </Tooltip>
                 );
               }}
             </UserContext.Consumer>
-            { this.props.handleCopy && <Tooltip title={titleCopy}>
-              <span>
-                <IconButton
-                  aria-label="copy"
-                  disabled={numberOfSelectedElements > maxNumberOfObservablesToCopy}
-                  onClick={this.props.handleCopy}
-                  color="primary"
-                  size="large">
-                  <ContentCopy />
-                </IconButton>
-              </span>
-            </Tooltip>}
+            {this.props.handleCopy && (
+              <Tooltip title={titleCopy}>
+                <span>
+                  <IconButton
+                    aria-label="copy"
+                    disabled={
+                      numberOfSelectedElements > maxNumberOfObservablesToCopy
+                    }
+                    onClick={this.props.handleCopy}
+                    color="primary"
+                    size="small"
+                  >
+                    <ContentCopyOutlined fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            )}
+            {!enrichDisable && (
             <Tooltip title={t('Enrichment')}>
               <span>
                 <IconButton
                   aria-label="enrichment"
-                  disabled={enrichDisable || this.state.processing}
+                  disabled={this.state.processing}
                   onClick={this.handleOpenEnrichment.bind(this)}
                   color="primary"
-                  size="large"
+                  size="small"
                 >
-                  <CloudRefresh />
+                  <CloudRefresh fontSize="small" />
                 </IconButton>
               </span>
             </Tooltip>
+            )}
+            {!promoteDisable && (
             <Tooltip title={t('Indicators/observables generation')}>
               <span>
                 <IconButton
                   aria-label="promote"
-                  disabled={promoteDisable || this.state.processing}
+                  disabled={this.state.processing}
                   onClick={this.handleOpenPromote.bind(this)}
                   color="primary"
-                  size="large"
+                  size="small"
                 >
-                  <TransformOutlined />
+                  <TransformOutlined fontSize="small" />
                 </IconButton>
               </span>
-            </Tooltip>
-            <Tooltip title={t('Merge')}>
-              <span>
-                <IconButton
-                  aria-label="merge"
-                  disabled={
-                    typesAreNotMergable
-                    || typesAreDifferent
-                    || numberOfSelectedElements < 2
-                    || numberOfSelectedElements > 4
-                    || selectAll
-                    || this.state.processing
-                  }
-                  onClick={this.handleOpenMerge.bind(this)}
-                  color="primary"
-                  size="large"
-                >
-                  <Merge />
-                </IconButton>
-              </span>
-            </Tooltip>
+              </Tooltip>
+            )}
+            {!typesAreNotMergable && (
+              <Tooltip title={t('Merge')}>
+                <span>
+                  <IconButton
+                    aria-label="merge"
+                    disabled={
+                      typesAreDifferent
+                      || numberOfSelectedElements < 2
+                      || numberOfSelectedElements > 4
+                      || selectAll
+                      || this.state.processing
+                    }
+                    onClick={this.handleOpenMerge.bind(this)}
+                    color="primary"
+                    size="small"
+                  >
+                    <MergeOutlined fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            )}
           </Security>
           {container && (
             <Security needs={[KNOWLEDGE_KNUPDATE]}>
@@ -1324,31 +1417,33 @@ class ToolBar extends Component {
                     }
                     onClick={this.handleLaunchRemove.bind(this)}
                     color="primary"
-                    size="large"
+                    size="small"
                   >
-                    <LinkOffOutlined />
+                    <LinkOffOutlined fontSize="small" />
                   </IconButton>
                 </span>
               </Tooltip>
             </Security>
           )}
-          <Security needs={[KNOWLEDGE_KNUPDATE_KNDELETE]}>
-            <Tooltip title={t('Delete')}>
-              <span>
-                <IconButton
-                  aria-label="delete"
-                  disabled={
-                    numberOfSelectedElements === 0 || this.state.processing
-                  }
-                  onClick={this.handleLaunchDelete.bind(this)}
-                  color="primary"
-                  size="large"
-                >
-                  <DeleteOutlined />
-                </IconButton>
-              </span>
-            </Tooltip>
-          </Security>
+          {deleteDisable !== true && (
+            <Security needs={[KNOWLEDGE_KNUPDATE_KNDELETE]}>
+              <Tooltip title={t('Delete')}>
+                <span>
+                  <IconButton
+                    aria-label="delete"
+                    disabled={
+                      numberOfSelectedElements === 0 || this.state.processing
+                    }
+                    onClick={this.handleLaunchDelete.bind(this)}
+                    color="primary"
+                    size="small"
+                  >
+                    <DeleteOutlined fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </Security>
+          )}
         </Toolbar>
         <Dialog
           PaperProps={{ elevation: 1 }}
@@ -1472,10 +1567,10 @@ class ToolBar extends Component {
                                 />
                                 {R.last(R.toPairs(filters))[0]
                                   !== currentFilter[0] && (
-                                  <Chip
-                                    classes={{ root: classes.operator }}
-                                    label={t('AND')}
-                                  />
+                                    <Chip
+                                      classes={{ root: classes.operator }}
+                                      label={t('AND')}
+                                    />
                                 )}
                               </span>
                             );
@@ -1593,7 +1688,7 @@ class ToolBar extends Component {
                     aria-label="Delete"
                     className={classes.stepCloseButton}
                     onClick={this.handleRemoveStep.bind(this, i)}
-                    size="large"
+                    size="small"
                   >
                     <CancelOutlined fontSize="small" />
                   </IconButton>
@@ -1693,8 +1788,8 @@ class ToolBar extends Component {
                     primary={defaultValue(element)}
                     secondary={truncate(
                       element.description
-                        || element.x_opencti_description
-                        || '',
+                      || element.x_opencti_description
+                      || '',
                       60,
                     )}
                   />
@@ -1758,48 +1853,54 @@ class ToolBar extends Component {
               {t('Aliases')}
             </Typography>
             {newAliases.map((label) => (label.length > 0 ? (
-                <Chip
-                  key={label}
-                  classes={{ root: classes.aliases }}
-                  label={label}
-                />
+              <Chip
+                key={label}
+                classes={{ root: classes.aliases }}
+                label={label}
+              />
             ) : (
               ''
             )))}
-            <Typography
-              variant="h3"
-              gutterBottom={true}
-              style={{ marginTop: 20 }}
-            >
-              {t('Author')}
-            </Typography>
-            {R.pathOr('', ['createdBy', 'name'], keptElement)}
-            <Typography
-              variant="h3"
-              gutterBottom={true}
-              style={{ marginTop: 20 }}
-            >
-              {t('Marking')}
-            </Typography>
-            {R.pathOr([], ['markingDefinitions', 'edges'], keptElement).length
-            > 0 ? (
-                R.map(
-                  (markingDefinition) => (
-                  <ItemMarking
-                    key={markingDefinition.node.id}
-                    label={markingDefinition.node.definition}
-                  />
-                  ),
-                  R.pathOr([], ['objectMarking', 'edges'], keptElement),
-                )
-              ) : (
-              <ItemMarking label="TLP:CLEAR" />
-              )}
-            <Alert severity="warning" style={{ marginTop: 20 }}>
-              {t(
-                'The relations attached to selected entities will be copied to the merged entity.',
-              )}
-            </Alert>
+            {noAuthor !== true && <>
+              <Typography
+                variant="h3"
+                gutterBottom={true}
+                style={{ marginTop: 20 }}
+              >
+                {t('Author')}
+              </Typography>
+              {R.pathOr('', ['createdBy', 'name'], keptElement)}
+            </>}
+            {noMarking !== true && <>
+              <Typography
+                variant="h3"
+                gutterBottom={true}
+                style={{ marginTop: 20 }}
+              >
+                {t('Marking')}
+              </Typography>
+              {R.pathOr([], ['markingDefinitions', 'edges'], keptElement).length
+              > 0 ? (
+                  R.map(
+                    (markingDefinition) => (
+                    <ItemMarking
+                      key={markingDefinition.node.id}
+                      label={markingDefinition.node.definition}
+                    />
+                    ),
+                    R.pathOr([], ['objectMarking', 'edges'], keptElement),
+                  )
+                ) : (
+                <ItemMarking label="TLP:CLEAR" />
+                )}
+            </>}
+            {noWarning !== true && <>
+              <Alert severity="warning" style={{ marginTop: 20 }}>
+                {t(
+                  'The relations attached to selected entities will be copied to the merged entity.',
+                )}
+              </Alert>
+            </>}
             <div className={classes.buttons}>
               <Button
                 variant="contained"
