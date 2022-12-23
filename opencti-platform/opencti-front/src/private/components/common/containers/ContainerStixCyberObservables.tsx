@@ -3,9 +3,7 @@ import { createFragmentContainer, graphql } from 'react-relay';
 import * as R from 'ramda';
 import makeStyles from '@mui/styles/makeStyles';
 import ListLines from '../../../../components/list_lines/ListLines';
-import ContainerStixCyberObservablesLines, {
-  containerStixCyberObservablesLinesQuery,
-} from './ContainerStixCyberObservablesLines';
+import ContainerStixCyberObservablesLines, { containerStixCyberObservablesLinesQuery } from './ContainerStixCyberObservablesLines';
 import StixCyberObservablesRightBar from '../../observations/stix_cyber_observables/StixCyberObservablesRightBar';
 import ToolBar from '../../data/ToolBar';
 import { defaultValue } from '../../../../utils/Graph';
@@ -15,10 +13,7 @@ import useLocalStorage, {
 import { Theme } from '../../../../components/Theme';
 import { Filters } from '../../../../components/list_lines';
 import { ModuleHelper } from '../../../../utils/platformModulesHelper';
-import {
-  ContainerStixCyberObservablesLinesQuery,
-  ContainerStixCyberObservablesLinesQuery$variables,
-} from './__generated__/ContainerStixCyberObservablesLinesQuery.graphql';
+import { ContainerStixCyberObservablesLinesQuery, ContainerStixCyberObservablesLinesQuery$variables } from './__generated__/ContainerStixCyberObservablesLinesQuery.graphql';
 import { StixCyberObservableLine_node$data } from '../../observations/stix_cyber_observables/__generated__/StixCyberObservableLine_node.graphql';
 import useQueryLoading from '../../../../utils/hooks/useQueryLoading';
 import Loader, { LoaderVariant } from '../../../../components/Loader';
@@ -191,9 +186,9 @@ ContainerStixCyberObservablesComponentProps
   };
 
   const handleToggleSelectEntity = (
-    entity: StixCyberObservableLine_node$data | Array<StixCyberObservableLine_node$data>,
+    entity: StixCyberObservableLine_node$data | StixCyberObservableLine_node$data[],
     event: React.SyntheticEvent,
-    forceRemove: Array<StixCyberObservableLine_node$data>,
+    forceRemove: StixCyberObservableLine_node$data[],
   ) => {
     event.stopPropagation();
     event.preventDefault();
