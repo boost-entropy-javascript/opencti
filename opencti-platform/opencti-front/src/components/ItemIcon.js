@@ -46,21 +46,24 @@ import {
 } from 'mdi-material-ui';
 import { itemColor } from '../utils/Colors';
 
-const iconSelector = (type, variant, fontSize, color) => {
+const iconSelector = (type, variant, fontSize, color, isReversed) => {
   let style = {};
   switch (variant) {
     case 'inline':
       style = {
         color: color ?? itemColor(type),
-        width: 20,
-        height: 20,
+        width: 15,
+        height: 15,
         margin: '0 7px 0 0',
         float: 'left',
+        paddingTop: 2,
+        transform: isReversed ? 'rotate(-90deg)' : 'none',
       };
       break;
     default:
       style = {
         color: color ?? itemColor(type),
+        transform: isReversed ? 'rotate(-90deg)' : 'none',
       };
   }
 
@@ -275,9 +278,9 @@ const iconSelector = (type, variant, fontSize, color) => {
 };
 
 const ItemIcon = (props) => {
-  const { type, size, variant, color = null } = props;
+  const { type, size, variant, color = null, isReversed = false } = props;
   const fontSize = size || 'medium';
-  return iconSelector(type, variant, fontSize, color);
+  return iconSelector(type, variant, fontSize, color, isReversed);
 };
 
 ItemIcon.propTypes = {
@@ -285,6 +288,7 @@ ItemIcon.propTypes = {
   size: PropTypes.string,
   variant: PropTypes.string,
   color: PropTypes.string,
+  isReversed: PropTypes.bool,
 };
 
 export default ItemIcon;
