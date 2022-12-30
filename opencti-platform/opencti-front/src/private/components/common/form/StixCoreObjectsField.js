@@ -141,6 +141,27 @@ export const stixCoreObjectsFieldSearchQuery = graphql`
             first_seen
             last_seen
           }
+          ... on Case {
+            name
+          }
+          ... on Channel {
+            name
+          }
+          ... on Narrative {
+            name
+          }
+          ... on Language {
+            name
+          }
+          ... on DataComponent {
+            name
+          }
+          ... on DataSource {
+            name
+          }
+          ... on Case {
+            name
+          }
           ... on StixCyberObservable {
             observable_value
             x_opencti_description

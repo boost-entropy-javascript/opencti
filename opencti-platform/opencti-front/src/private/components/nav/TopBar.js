@@ -1,17 +1,13 @@
-import React, { useState } from 'react';
-import * as PropTypes from 'prop-types';
-import { withRouter, Link } from 'react-router-dom';
-import { compose } from 'ramda';
-import withTheme from '@mui/styles/withTheme';
-import withStyles from '@mui/styles/withStyles';
+import React, { useEffect, useState } from 'react';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import {
   AccountCircleOutlined,
+  ContentPasteSearchOutlined,
   ExploreOutlined,
   InsertChartOutlined,
-  ContentPasteSearchOutlined,
 } from '@mui/icons-material';
 import { UploadOutline } from 'mdi-material-ui';
 import Menu from '@mui/material/Menu';
@@ -19,7 +15,8 @@ import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import { graphql } from 'react-relay';
-import inject18n from '../../../components/i18n';
+import { makeStyles, useTheme } from '@mui/styles';
+import { useFormatter } from '../../../components/i18n';
 import SearchInput from '../../../components/SearchInput';
 import TopMenuDashboard from './TopMenuDashboard';
 import TopMenuSearch from './TopMenuSearch';
@@ -59,9 +56,9 @@ import TopMenuData from './TopMenuData';
 import TopMenuSettings from './TopMenuSettings';
 import TopMenuProfile from './TopMenuProfile';
 import TopMenuTechniques from './TopMenuTechniques';
-import { commitMutation } from '../../../relay/environment';
+import { commitMutation, MESSAGING$ } from '../../../relay/environment';
 import Security from '../../../utils/Security';
-import { KNOWLEDGE, KNOWLEDGE_KNASKIMPORT, EXPLORE } from '../../../utils/hooks/useGranted';
+import { EXPLORE, KNOWLEDGE, KNOWLEDGE_KNASKIMPORT } from '../../../utils/hooks/useGranted';
 import TopMenuCourseOfAction from './TopMenuCourseOfAction';
 import TopMenuWorkspacesDashboards from './TopMenuWorkspacesDashboards';
 import TopMenuWorkspacesInvestigations from './TopMenuWorkspacesInvestigations';
@@ -73,8 +70,11 @@ import TopMenuImport from './TopMenuImport';
 import TopMenuLocation from './TopMenuLocation';
 import TopMenuDataComponent from './TopMenuDataComponent';
 import TopMenuDataSource from './TopMenuDataSource';
+import TopMenuFeedback from './TopMenuFeedback';
+import FeedbackCreation from '../cases/feedbacks/FeedbackCreation';
+import TopMenuCases from './TopMenuCases';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   appBar: {
     width: '100%',
     zIndex: theme.zIndex.drawer + 1,
@@ -91,6 +91,11 @@ const styles = (theme) => ({
   logo: {
     cursor: 'pointer',
     height: 35,
+  },
+  logoCollapsed: {
+    cursor: 'pointer',
+    height: 35,
+    marginRight: 10,
   },
   menuContainer: {
     float: 'left',
@@ -113,7 +118,7 @@ const styles = (theme) => ({
     float: 'left',
     margin: '0 5px 0 5px',
   },
-});
+}));
 
 const logoutMutation = graphql`
   mutation TopBarLogoutMutation {
@@ -122,18 +127,30 @@ const logoutMutation = graphql`
 `;
 
 const TopBar = ({
-  t,
-  classes,
-  location,
-  history,
   keyword,
-  theme,
   handleChangeTimeField,
   timeField,
   handleChangeDashboard,
   dashboard,
 }) => {
+  const theme = useTheme();
+  const history = useHistory();
+  const location = useLocation();
+  const classes = useStyles();
+  const { t } = useFormatter();
+  const [navOpen, setNavOpen] = useState(
+    localStorage.getItem('navOpen') === 'true',
+  );
+  useEffect(() => {
+    const sub = MESSAGING$.toggleNav.subscribe({
+      next: () => setNavOpen(localStorage.getItem('navOpen') === 'true'),
+    });
+    return () => {
+      sub.unsubscribe();
+    };
+  });
   const [menuOpen, setMenuOpen] = useState({ open: false, anchorEl: null });
+  const [openDrawer, setOpenDrawer] = useState(false);
   const handleOpenMenu = (event) => {
     event.preventDefault();
     setMenuOpen({ open: true, anchorEl: event.currentTarget });
@@ -156,6 +173,15 @@ const TopBar = ({
       history.push(`/dashboard/search/${encodeKey}`);
     }
   };
+  const handleOpenDrawer = () => {
+    setOpenDrawer(true);
+    handleCloseMenu();
+  };
+  const handleCloseDrawer = () => {
+    setOpenDrawer(false);
+    handleCloseMenu();
+  };
+
   return (
     <AppBar
       position="fixed"
@@ -166,7 +192,11 @@ const TopBar = ({
       <Toolbar>
         <div className={classes.logoContainer}>
           <Link to="/dashboard">
-            <img src={theme.logo} alt="logo" className={classes.logo} />
+            <img
+              src={navOpen ? theme.logo : theme.logo_collapsed}
+              alt="logo"
+              className={navOpen ? classes.logo : classes.logoCollapsed}
+            />
           </Link>
         </div>
         <div className={classes.menuContainer}>
@@ -183,6 +213,13 @@ const TopBar = ({
           {(location.pathname === '/dashboard/analysis'
             || location.pathname.match('/dashboard/analysis/[a-z_]+$')) && (
             <TopMenuAnalysis />
+          )}
+          {(location.pathname === '/dashboard/cases'
+            || location.pathname.match('/dashboard/cases/[a-z_]+$')) && (
+            <TopMenuCases />
+          )}
+          {location.pathname.includes('/dashboard/cases/feedbacks/') && (
+            <TopMenuFeedback />
           )}
           {location.pathname.includes('/dashboard/analysis/reports/') && (
             <TopMenuReport />
@@ -296,21 +333,21 @@ const TopBar = ({
             || location.pathname.match('/dashboard/techniques/[a-z_]+$')) && (
             <TopMenuTechniques />
           )}
-          {location.pathname.includes('/dashboard/techniques/attack_patterns/') && (
-              <TopMenuAttackPattern />
-          )}
+          {location.pathname.includes(
+            '/dashboard/techniques/attack_patterns/',
+          ) && <TopMenuAttackPattern />}
           {location.pathname.includes('/dashboard/techniques/narratives/') && (
             <TopMenuNarrative />
           )}
-          {location.pathname.includes('/dashboard/techniques/courses_of_action/') && (
-            <TopMenuCourseOfAction />
-          )}
-          {location.pathname.includes('/dashboard/techniques/data_components/') && (
-            <TopMenuDataComponent />
-          )}
-          {location.pathname.includes('/dashboard/techniques/data_sources/') && (
-            <TopMenuDataSource />
-          )}
+          {location.pathname.includes(
+            '/dashboard/techniques/courses_of_action/',
+          ) && <TopMenuCourseOfAction />}
+          {location.pathname.includes(
+            '/dashboard/techniques/data_components/',
+          ) && <TopMenuDataComponent />}
+          {location.pathname.includes(
+            '/dashboard/techniques/data_sources/',
+          ) && <TopMenuDataSource />}
           {location.pathname.includes('/dashboard/data') ? <TopMenuData /> : ''}
           {location.pathname.includes('/dashboard/settings') && (
             <TopMenuSettings />
@@ -462,27 +499,22 @@ const TopBar = ({
               >
                 {t('Profile')}
               </MenuItem>
+              <MenuItem
+                onClick={handleOpenDrawer}
+                >
+                {t('Feedback')}
+              </MenuItem>
               <MenuItem onClick={handleLogout}>{t('Logout')}</MenuItem>
             </Menu>
           </div>
         </div>
       </Toolbar>
+      <FeedbackCreation
+        openDrawer={openDrawer}
+        handleCloseDrawer={handleCloseDrawer}
+      />
     </AppBar>
   );
 };
 
-TopBar.propTypes = {
-  keyword: PropTypes.string,
-  theme: PropTypes.object,
-  classes: PropTypes.object,
-  location: PropTypes.object,
-  t: PropTypes.func,
-  history: PropTypes.object,
-};
-
-export default compose(
-  inject18n,
-  withRouter,
-  withTheme,
-  withStyles(styles),
-)(TopBar);
+export default TopBar;
