@@ -753,6 +753,8 @@ enum WorksFilter {
   connector_id
   completed_number
   completed_time
+  received_time
+  processed_time
 }
 
 input WorksFiltering {
@@ -1619,6 +1621,7 @@ enum ExternalReferencesOrdering {
   modified
   created_at
   updated_at
+  creator
 }
 
 enum ExternalReferencesFilter {
@@ -2330,6 +2333,7 @@ enum NotesOrdering {
   x_opencti_workflow_id
   objectMarking
   note_types
+  creator
 }
 
 enum NotesFilter {
@@ -2586,6 +2590,7 @@ enum OpinionsOrdering {
   createdBy
   objectMarking
   x_opencti_workflow_id
+  creator
 }
 
 enum OpinionsFilter {
@@ -8607,6 +8612,7 @@ enum GroupingsOrdering {
   createdBy
   objectMarking
   x_opencti_workflow_id
+  creator
 }
 
 enum GroupingsFilter {
